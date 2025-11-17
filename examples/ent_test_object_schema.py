@@ -6,6 +6,7 @@ from ent_test_thing_pattern import EntTestThingPattern
 from entpy import (
     Action,
     AllowAll,
+    BoolField,
     PrivacyRule,
     FieldValidator,
     EdgeField,
@@ -58,6 +59,7 @@ class EntTestObjectSchema(Schema):
             IntField("status_code").example(404),
             JsonField("some_json", "list[str]").example(["hello", "world"]),
             StringField("validated_field", 100).validators([CustomValidator()]),
+            BoolField("is_it_true").example(False),
         ]
 
     def get_privacy_rules(self, action: Action) -> list[PrivacyRule]:

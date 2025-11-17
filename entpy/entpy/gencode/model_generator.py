@@ -4,8 +4,9 @@ from entpy import (
     CompositeIndex,
     DatetimeField,
     EdgeField,
-    EnumField,
+    BoolField,
     IntField,
+    EnumField,
     JsonField,
     Pattern,
     Schema,
@@ -41,7 +42,11 @@ def generate(descriptor: Descriptor, base_name: str) -> GeneratedContent:
             else field.get_python_type()
         )
 
-        if isinstance(field, DatetimeField):
+        if isinstance(field, BoolField):
+            types_imports.append("from sqlalchemy import Boolean")
+            fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
+            fields_code += f"mapped_column(Boolean(){common_column_attributes})\n"
+        elif isinstance(field, DatetimeField):
             types_imports.append("from sqlalchemy import DateTime")
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
             fields_code += (

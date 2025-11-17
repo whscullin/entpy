@@ -9,18 +9,18 @@ from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
 from typing import Self
-from evc import ExampleViewerContext
-from ent_test_thing_pattern import ThingStatus
 from sqlalchemy import select, Select, func, Result
-from sqlalchemy.orm import Mapped, mapped_column
-from database import get_session
-from entpy import EntNotFoundError, ExecutionError
-from sqlalchemy.sql.expression import ColumnElement
-from typing import Any, TypeVar, Generic
-from typing import cast
-from .ent_model import EntModel
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import String
+from entpy import EntNotFoundError, ExecutionError
+from sqlalchemy.orm import Mapped, mapped_column
+from evc import ExampleViewerContext
+from typing import cast
+from database import get_session
+from typing import Any, TypeVar, Generic
+from .ent_model import EntModel
+from ent_test_thing_pattern import ThingStatus
+from sqlalchemy.sql.expression import ColumnElement
 
 
 class EntTestThingModel(EntModel):

@@ -1,6 +1,7 @@
 from entpy import (
     DatetimeField,
     EdgeField,
+    BoolField,
     EnumField,
     IntField,
     JsonField,
@@ -149,6 +150,8 @@ def _generate_columns(pattern: Pattern) -> GeneratedContent:
         if isinstance(field, DatetimeField):
             imports.append("from sqlalchemy import DateTime")
             column_type = "DateTime(timezone=True)"
+        elif isinstance(field, BoolField):
+            column_type = "Boolean()"
         elif isinstance(field, EdgeField):
             column_type = "DBUUID(as_uuid=True)"
         elif isinstance(field, EnumField):

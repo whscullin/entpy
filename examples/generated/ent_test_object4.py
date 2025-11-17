@@ -20,14 +20,14 @@ from evc import ExampleViewerContext
 from database import get_session
 from sqlalchemy import select, Select, func, Result
 from sentinels import Sentinel  # type: ignore
-from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from typing import TYPE_CHECKING
-from sqlalchemy.sql.expression import ColumnElement
-from typing import Any, TypeVar, Generic
 from entpy import Field
-from .ent_model import EntModel
+from typing import TYPE_CHECKING
 from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from typing import Any, TypeVar, Generic
+from .ent_model import EntModel
+from sqlalchemy import ForeignKey
+from sqlalchemy.sql.expression import ColumnElement
 from ent_test_object4_schema import EntTestObject4Schema
 
 if TYPE_CHECKING:

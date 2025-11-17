@@ -18,27 +18,29 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean
 from sqlalchemy import Integer
-from ent_test_object_schema import EntTestObjectSchema
-from sqlalchemy import Enum as DBEnum
-from typing import TYPE_CHECKING
-from .ent_test_thing import IEntTestThing
 from entpy import Field, FieldWithDynamicExample
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from sqlalchemy import String
-from .ent_test_thing import EntTestThingModel
-from sqlalchemy import select, Select, func, Result
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy import ForeignKey
 from sqlalchemy import JSON
+from .ent_test_thing import EntTestThingModel
+from sqlalchemy import ForeignKey
+from sqlalchemy import select
+from sqlalchemy import Enum as DBEnum
 from sqlalchemy import DateTime
-from ent_test_object_schema import Status
-from ent_test_thing_pattern import ThingStatus
-from sqlalchemy.sql.expression import ColumnElement
-from typing import Any, TypeVar, Generic
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from .ent_model import EntModel
+from ent_test_thing_pattern import ThingStatus
+from sqlalchemy import Select, func, Result
+from ent_test_object_schema import EntTestObjectSchema
 from sqlalchemy import Text
+from .ent_test_thing import IEntTestThing
+from typing import TYPE_CHECKING
+from typing import Any, TypeVar, Generic
+from sqlalchemy import String
+from ent_test_object_schema import Status
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.expression import ColumnElement
 
 if TYPE_CHECKING:
     from .ent_test_sub_object import EntTestSubObject
@@ -55,6 +57,7 @@ class EntTestObjectModel(EntTestThingModel):
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     context: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    is_it_true: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     lastname: Mapped[str | None] = mapped_column(
         String(100), nullable=True, server_default="Doe"
     )
@@ -139,6 +142,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def context(self) -> str | None:
         return self.model.context
+
+    @property
+    def is_it_true(self) -> bool | None:
+        return self.model.is_it_true
 
     @property
     def lastname(self) -> str | None:
@@ -390,6 +397,7 @@ class EntTestObjectMutator:
         username: str,
         city: str | None = None,
         context: str | None = None,
+        is_it_true: bool | None = None,
         lastname: str | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
@@ -415,6 +423,7 @@ class EntTestObjectMutator:
             username=username,
             city=city,
             context=context,
+            is_it_true=is_it_true,
             lastname=lastname,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
@@ -451,6 +460,7 @@ class EntTestObjectMutatorCreationAction:
     username: str
     city: str | None = None
     context: str | None = None
+    is_it_true: bool | None = None
     lastname: str | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
@@ -475,6 +485,7 @@ class EntTestObjectMutatorCreationAction:
         username: str,
         city: str | None,
         context: str | None,
+        is_it_true: bool | None,
         lastname: str | None,
         optional_sub_object_id: UUID | None,
         optional_sub_object_no_ex_id: UUID | None,
@@ -497,6 +508,7 @@ class EntTestObjectMutatorCreationAction:
         self.username = username
         self.city = city
         self.context = context
+        self.is_it_true = is_it_true
         self.lastname = lastname
         self.optional_sub_object_id = optional_sub_object_id
         self.optional_sub_object_no_ex_id = optional_sub_object_no_ex_id
@@ -527,6 +539,7 @@ class EntTestObjectMutatorCreationAction:
             username=self.username,
             city=self.city,
             context=self.context,
+            is_it_true=self.is_it_true,
             lastname=self.lastname,
             optional_sub_object_id=self.optional_sub_object_id,
             optional_sub_object_no_ex_id=self.optional_sub_object_no_ex_id,
@@ -555,6 +568,7 @@ class EntTestObjectMutatorUpdateAction:
     required_sub_object_id: UUID
     username: str
     city: str | None = None
+    is_it_true: bool | None = None
     lastname: str | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
@@ -576,6 +590,7 @@ class EntTestObjectMutatorUpdateAction:
         self.required_sub_object_id = ent.required_sub_object_id
         self.username = ent.username
         self.city = ent.city
+        self.is_it_true = ent.is_it_true
         self.lastname = ent.lastname
         self.optional_sub_object_id = ent.optional_sub_object_id
         self.optional_sub_object_no_ex_id = ent.optional_sub_object_no_ex_id
@@ -603,6 +618,7 @@ class EntTestObjectMutatorUpdateAction:
         model.required_sub_object_id = self.required_sub_object_id
         model.username = self.username
         model.city = self.city
+        model.is_it_true = self.is_it_true
         model.lastname = self.lastname
         model.optional_sub_object_id = self.optional_sub_object_id
         model.optional_sub_object_no_ex_id = self.optional_sub_object_no_ex_id
@@ -650,6 +666,7 @@ class EntTestObjectExample:
         username: str | Sentinel = NOTHING,
         city: str | None = None,
         context: str | None = None,
+        is_it_true: bool | None = None,
         lastname: str | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
@@ -697,6 +714,8 @@ class EntTestObjectExample:
             "This is some good context." if isinstance(context, Sentinel) else context
         )
 
+        is_it_true = False if isinstance(is_it_true, Sentinel) else is_it_true
+
         if (
             isinstance(optional_sub_object_id, Sentinel)
             or optional_sub_object_id is None
@@ -731,6 +750,7 @@ class EntTestObjectExample:
             username=username,
             city=city,
             context=context,
+            is_it_true=is_it_true,
             lastname=lastname,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
