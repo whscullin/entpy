@@ -83,7 +83,8 @@ view_sql = str(view_query.compile(compile_kwargs={{"literal_binds": True}})).rep
 )
 
 # Create the view DDL with IF NOT EXISTS for idempotency
-create_view_ddl = DDL(f"CREATE VIEW IF NOT EXISTS {to_snake_case(base_name)}_view AS {{view_sql}}")
+create_view_ddl_sqlite = DDL(f"CREATE VIEW IF NOT EXISTS {to_snake_case(base_name)}_view AS {{view_sql}}")
+create_view_ddl_postgresql = DDL(f"CREATE OR REPLACE VIEW {to_snake_case(base_name)}_view AS {{view_sql}}")
 
 # Create the drop view DDL with IF EXISTS for idempotency
 drop_view_ddl = DDL("DROP VIEW IF EXISTS {to_snake_case(base_name)}_view")
@@ -111,12 +112,12 @@ class {base_name}View():
 event.listen(
     {base_name}Model.metadata,
     "after_create",
-    create_view_ddl.execute_if(dialect="sqlite"),
+    create_view_ddl_sqlite.execute_if(dialect="sqlite"),
 )
 event.listen(
     {base_name}Model.metadata,
     "after_create",
-    create_view_ddl.execute_if(dialect="postgresql"),
+    create_view_ddl_postgresql.execute_if(dialect="postgresql"),
 )
 
 event.listen(
