@@ -14,6 +14,7 @@ class Field(ABC, Generic[T]):
     original_name: str
     nullable: bool = True
     is_unique: bool = False
+    is_indexed: bool = False
     is_immutable: bool = False
     description: str | None = None
     _validators: list[FieldValidator[T]]
@@ -33,6 +34,10 @@ class Field(ABC, Generic[T]):
 
     def unique(self) -> Self:
         self.is_unique = True
+        return self
+
+    def index(self) -> Self:
+        self.is_indexed = True
         return self
 
     def documentation(self, doc: str) -> Self:

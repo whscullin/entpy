@@ -10,13 +10,13 @@ from sqlalchemy import (
     Selectable,
 )
 from .ent_test_thing import EntTestThingModel
-from .ent_test_object2 import EntTestObject2Model
 from sqlalchemy import String
+from .ent_test_object2 import EntTestObject2Model
 from .ent_test_object import EntTestObjectModel
-from sqlalchemy import Enum as DBEnum
-from ent_test_thing_pattern import ThingStatus
 from sqlalchemy import DateTime
+from sqlalchemy import Enum as DBEnum
 from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from ent_test_thing_pattern import ThingStatus
 
 
 view_query: Selectable = union_all(
@@ -45,7 +45,12 @@ view_sql = str(view_query.compile(compile_kwargs={"literal_binds": True})).repla
 )
 
 # Create the view DDL with IF NOT EXISTS for idempotency
-create_view_ddl = DDL(f"CREATE VIEW IF NOT EXISTS ent_test_thing_view AS {view_sql}")
+create_view_ddl_sqlite = DDL(
+    f"CREATE VIEW IF NOT EXISTS ent_test_thing_view AS {view_sql}"
+)
+create_view_ddl_postgresql = DDL(
+    f"CREATE OR REPLACE VIEW ent_test_thing_view AS {view_sql}"
+)
 
 # Create the drop view DDL with IF EXISTS for idempotency
 drop_view_ddl = DDL("DROP VIEW IF EXISTS ent_test_thing_view")
@@ -84,12 +89,12 @@ class EntTestThingView:
 event.listen(
     EntTestThingModel.metadata,
     "after_create",
-    create_view_ddl.execute_if(dialect="sqlite"),
+    create_view_ddl_sqlite.execute_if(dialect="sqlite"),
 )
 event.listen(
     EntTestThingModel.metadata,
     "after_create",
-    create_view_ddl.execute_if(dialect="postgresql"),
+    create_view_ddl_postgresql.execute_if(dialect="postgresql"),
 )
 
 event.listen(

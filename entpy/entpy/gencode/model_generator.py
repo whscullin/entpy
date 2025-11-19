@@ -31,6 +31,7 @@ def generate(descriptor: Descriptor, base_name: str) -> GeneratedContent:
             "True" if field.nullable else "False"
         )
         common_column_attributes += ", unique=True" if field.is_unique else ""
+        common_column_attributes += ", index=True" if field.is_indexed else ""
         if isinstance(field, FieldWithDefault):
             default = field.generate_default()
             if default:

@@ -18,29 +18,30 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy import Integer
-from ent_test_object_schema import Status
-from sqlalchemy import select, Select, func, Result
+from sqlalchemy import JSON
 from sqlalchemy import String
+from sqlalchemy import DateTime
+from .ent_test_thing import EntTestThingModel
+from typing import Any, TypeVar, Generic
+from entpy import Field, FieldWithDynamicExample
+from typing import TYPE_CHECKING
+from sqlalchemy import Integer
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from ent_test_thing_pattern import ThingStatus
+from sqlalchemy import Text
+from ent_test_object_schema import Status
+from sqlalchemy.orm import Mapped, mapped_column
+from sentinels import NOTHING, Sentinel  # type: ignore
+from ent_test_object_schema import EntTestObjectSchema
 from .ent_model import EntModel
 from sqlalchemy import Enum as DBEnum
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.dialects.postgresql import JSONB
-from ent_test_object_schema import EntTestObjectSchema
-from .ent_test_thing import IEntTestThing
-from typing import TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import JSON
+from sqlalchemy import select
 from sqlalchemy.sql.expression import ColumnElement
-from sqlalchemy import DateTime
-from entpy import Field, FieldWithDynamicExample
-from sqlalchemy import Text
+from .ent_test_thing import IEntTestThing
 from sqlalchemy import ForeignKey
-from ent_test_thing_pattern import ThingStatus
-from typing import Any, TypeVar, Generic
 from sqlalchemy import Boolean
-from .ent_test_thing import EntTestThingModel
+from sqlalchemy import Select, func, Result
+from sqlalchemy.dialects.postgresql import JSONB
 
 if TYPE_CHECKING:
     from .ent_test_sub_object import EntTestSubObject
@@ -50,7 +51,7 @@ if TYPE_CHECKING:
 class EntTestObjectModel(EntTestThingModel):
     __tablename__ = "test_object"
 
-    firstname: Mapped[str] = mapped_column(String(100), nullable=False)
+    firstname: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     required_sub_object_id: Mapped[UUID] = mapped_column(
         DBUUID(as_uuid=True), ForeignKey("test_sub_object.id"), nullable=False
     )
