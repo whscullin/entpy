@@ -18,29 +18,29 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy import Boolean
 from sqlalchemy import Integer
-from entpy import Field, FieldWithDynamicExample
-from sqlalchemy import JSON
-from .ent_test_thing import EntTestThingModel
-from sqlalchemy import ForeignKey
-from sqlalchemy import select
-from sqlalchemy import Enum as DBEnum
-from sqlalchemy import DateTime
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from ent_test_object_schema import Status
+from sqlalchemy import select, Select, func, Result
+from sqlalchemy import String
 from .ent_model import EntModel
-from ent_test_thing_pattern import ThingStatus
-from sqlalchemy import Select, func, Result
+from sqlalchemy import Enum as DBEnum
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy.dialects.postgresql import JSONB
 from ent_test_object_schema import EntTestObjectSchema
-from sqlalchemy import Text
 from .ent_test_thing import IEntTestThing
 from typing import TYPE_CHECKING
-from typing import Any, TypeVar, Generic
-from sqlalchemy import String
-from ent_test_object_schema import Status
-from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON
 from sqlalchemy.sql.expression import ColumnElement
+from sqlalchemy import DateTime
+from entpy import Field, FieldWithDynamicExample
+from sqlalchemy import Text
+from sqlalchemy import ForeignKey
+from ent_test_thing_pattern import ThingStatus
+from typing import Any, TypeVar, Generic
+from sqlalchemy import Boolean
+from .ent_test_thing import EntTestThingModel
 
 if TYPE_CHECKING:
     from .ent_test_sub_object import EntTestSubObject
@@ -73,7 +73,9 @@ class EntTestObjectModel(EntTestThingModel):
     self_id: Mapped[UUID | None] = mapped_column(
         DBUUID(as_uuid=True), ForeignKey("test_object.id"), nullable=True
     )
-    some_json: Mapped[list[str] | None] = mapped_column(JSON(), nullable=True)
+    some_json: Mapped[list[str] | None] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"), nullable=True
+    )
     some_pattern_id: Mapped[UUID | None] = mapped_column(
         DBUUID(as_uuid=True), nullable=True
     )

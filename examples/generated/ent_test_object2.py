@@ -22,14 +22,14 @@ from sqlalchemy import select, Select, func, Result
 from sqlalchemy import String
 from .ent_test_thing import IEntTestThing
 from ent_test_object2_schema import EntTestObject2Schema
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.orm import Mapped, mapped_column
-from entpy import Field
-from ent_test_thing_pattern import ThingStatus
-from typing import Any, TypeVar, Generic
 from .ent_model import EntModel
-from .ent_test_thing import EntTestThingModel
+from sqlalchemy.orm import Mapped, mapped_column
+from ent_test_thing_pattern import ThingStatus
+from sentinels import NOTHING, Sentinel  # type: ignore
+from typing import Any, TypeVar, Generic
 from sqlalchemy.sql.expression import ColumnElement
+from .ent_test_thing import EntTestThingModel
+from entpy import Field
 
 
 class EntTestObject2Model(EntTestThingModel):

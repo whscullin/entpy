@@ -67,8 +67,9 @@ def generate(descriptor: Descriptor, base_name: str) -> GeneratedContent:
             fields_code += f"mapped_column(Integer(){common_column_attributes})\n"
         elif isinstance(field, JsonField):
             types_imports.append("from sqlalchemy import JSON")
+            types_imports.append("from sqlalchemy.dialects.postgresql import JSONB")
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
-            fields_code += f"mapped_column(JSON(){common_column_attributes})\n"
+            fields_code += f'mapped_column(JSON().with_variant(JSONB(), "postgresql"){common_column_attributes})\n'
         elif isinstance(field, StringField):
             types_imports.append("from sqlalchemy import String")
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "

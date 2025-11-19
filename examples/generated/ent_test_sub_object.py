@@ -20,13 +20,13 @@ from evc import ExampleViewerContext
 from database import get_session
 from sqlalchemy import select, Select, func, Result
 from sqlalchemy import String
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.orm import Mapped, mapped_column
-from entpy import Field
-from ent_test_sub_object_schema import EntTestSubObjectSchema
-from typing import Any, TypeVar, Generic
 from .ent_model import EntModel
+from sqlalchemy.orm import Mapped, mapped_column
+from ent_test_sub_object_schema import EntTestSubObjectSchema
+from sentinels import NOTHING, Sentinel  # type: ignore
+from typing import Any, TypeVar, Generic
 from sqlalchemy.sql.expression import ColumnElement
+from entpy import Field
 
 
 class EntTestSubObjectModel(EntModel):

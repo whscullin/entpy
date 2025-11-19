@@ -21,15 +21,15 @@ from database import get_session
 from sqlalchemy import select, Select, func, Result
 from sqlalchemy import String
 from ent_parent_schema import EntParentSchema
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.orm import Mapped, mapped_column
-from entpy import Field
-from typing import TYPE_CHECKING
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from typing import Any, TypeVar, Generic
-from .ent_model import EntModel
 from sqlalchemy import ForeignKey
+from typing import TYPE_CHECKING
+from .ent_model import EntModel
+from sqlalchemy.orm import Mapped, mapped_column
+from sentinels import NOTHING, Sentinel  # type: ignore
+from typing import Any, TypeVar, Generic
 from sqlalchemy.sql.expression import ColumnElement
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from entpy import Field
 
 if TYPE_CHECKING:
     from .ent_grand_parent import EntGrandParent
