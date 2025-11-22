@@ -9,24 +9,27 @@ from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
 from typing import Self
+from .ent_model import EntModel
 from database import get_session
 from evc import ExampleViewerContext
 from sqlalchemy.orm import Mapped, mapped_column
+from typing import cast
+from sqlalchemy import Enum as DBEnum
+from sqlalchemy import select, Select, func, Result
 from sqlalchemy import String
 from entpy import EntNotFoundError, ExecutionError
-from typing import Any, TypeVar, Generic
-from typing import cast
-from .ent_model import EntModel
-from sqlalchemy import Enum as DBEnum
 from sqlalchemy.sql.expression import ColumnElement
+from typing import Any, TypeVar, Generic
 from ent_test_thing_pattern import ThingStatus
-from sqlalchemy import select, Select, func, Result
 
 
 class EntTestThingModel(EntModel):
     __abstract__ = True
 
     a_good_thing: Mapped[str] = mapped_column(String(100), nullable=False)
+    a_pattern_validated_field: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )
     thing_status: Mapped[ThingStatus | None] = mapped_column(
         DBEnum(ThingStatus, native_enum=True), nullable=True
     )
@@ -36,6 +39,11 @@ class IEntTestThing(Ent):
     @property
     @abstractmethod
     def a_good_thing(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def a_pattern_validated_field(self) -> str | None:
         pass
 
     @property
@@ -202,6 +210,7 @@ class IEntTestThingExample:
         vc: ExampleViewerContext,
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
+        a_pattern_validated_field: str | None = None,
         thing_status: ThingStatus | None = None,
     ) -> IEntTestThing:
         # TODO make sure we only use this in test mode
@@ -213,5 +222,6 @@ class IEntTestThingExample:
             vc=vc,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            a_pattern_validated_field=a_pattern_validated_field,
             thing_status=thing_status,
         )

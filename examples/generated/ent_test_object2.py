@@ -18,18 +18,18 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from ent_test_object2_schema import EntTestObject2Schema
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String
-from typing import Any, TypeVar, Generic
-from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
 from .ent_model import EntModel
-from sqlalchemy.sql.expression import ColumnElement
-from .ent_test_thing import IEntTestThing
-from .ent_test_thing import EntTestThingModel
+from ent_test_object2_schema import EntTestObject2Schema
 from ent_test_thing_pattern import ThingStatus
+from .ent_test_thing import EntTestThingModel
+from .ent_test_thing import IEntTestThing
+from sqlalchemy.orm import Mapped, mapped_column
+from entpy import Field
 from sqlalchemy import select, Select, func, Result
+from sqlalchemy import String
+from sqlalchemy.sql.expression import ColumnElement
+from typing import Any, TypeVar, Generic
+from sentinels import NOTHING, Sentinel  # type: ignore
 
 
 class EntTestObject2Model(EntTestThingModel):
@@ -61,6 +61,10 @@ class EntTestObject2(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def a_good_thing(self) -> str:
         return self.model.a_good_thing
+
+    @property
+    def a_pattern_validated_field(self) -> str | None:
+        return self.model.a_pattern_validated_field
 
     @property
     def some_field(self) -> str | None:
@@ -218,6 +222,7 @@ class EntTestObject2Mutator:
         cls,
         vc: ExampleViewerContext,
         a_good_thing: str,
+        a_pattern_validated_field: str | None = None,
         some_field: str | None = None,
         thing_status: ThingStatus | None = None,
         id: UUID | None = None,
@@ -228,6 +233,7 @@ class EntTestObject2Mutator:
             id=id,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            a_pattern_validated_field=a_pattern_validated_field,
             some_field=some_field,
             thing_status=thing_status,
         )
@@ -249,6 +255,7 @@ class EntTestObject2MutatorCreationAction:
     vc: ExampleViewerContext
     id: UUID
     a_good_thing: str
+    a_pattern_validated_field: str | None = None
     some_field: str | None = None
     thing_status: ThingStatus | None = None
 
@@ -258,6 +265,7 @@ class EntTestObject2MutatorCreationAction:
         id: UUID | None,
         created_at: datetime | None,
         a_good_thing: str,
+        a_pattern_validated_field: str | None,
         some_field: str | None,
         thing_status: ThingStatus | None,
     ) -> None:
@@ -265,16 +273,27 @@ class EntTestObject2MutatorCreationAction:
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
         self.id = id if id else generate_uuid(EntTestObject2, self.created_at)
         self.a_good_thing = a_good_thing
+        self.a_pattern_validated_field = a_pattern_validated_field
         self.some_field = some_field
         self.thing_status = thing_status
 
     async def gen_savex(self) -> EntTestObject2:
         session = get_session()
 
+        a_pattern_validated_field_validators = _get_field(
+            "a_pattern_validated_field"
+        )._validators
+        for validator in a_pattern_validated_field_validators:
+            if not validator.validate(self.a_pattern_validated_field):
+                raise ValidationError(
+                    "Invalid value for EntTestObject2.a_pattern_validated_field"
+                )
+
         model = EntTestObject2Model(
             id=self.id,
             created_at=self.created_at,
             a_good_thing=self.a_good_thing,
+            a_pattern_validated_field=self.a_pattern_validated_field,
             some_field=self.some_field,
             thing_status=self.thing_status,
         )
@@ -289,6 +308,7 @@ class EntTestObject2MutatorUpdateAction:
     ent: EntTestObject2
     id: UUID
     a_good_thing: str
+    a_pattern_validated_field: str | None = None
     some_field: str | None = None
     thing_status: ThingStatus | None = None
 
@@ -296,14 +316,25 @@ class EntTestObject2MutatorUpdateAction:
         self.vc = vc
         self.ent = ent
         self.a_good_thing = ent.a_good_thing
+        self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.some_field = ent.some_field
         self.thing_status = ent.thing_status
 
     async def gen_savex(self) -> EntTestObject2:
         session = get_session()
 
+        a_pattern_validated_field_validators = _get_field(
+            "a_pattern_validated_field"
+        )._validators
+        for validator in a_pattern_validated_field_validators:
+            if not validator.validate(self.a_pattern_validated_field):
+                raise ValidationError(
+                    "Invalid value for EntTestObject2.a_pattern_validated_field"
+                )
+
         model = self.ent.model
         model.a_good_thing = self.a_good_thing
+        model.a_pattern_validated_field = self.a_pattern_validated_field
         model.some_field = self.some_field
         model.thing_status = self.thing_status
         session.add(model)
@@ -336,6 +367,7 @@ class EntTestObject2Example:
         vc: ExampleViewerContext,
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
+        a_pattern_validated_field: str | None = None,
         some_field: str | None = None,
         thing_status: ThingStatus | None = None,
     ) -> EntTestObject2:
@@ -345,10 +377,17 @@ class EntTestObject2Example:
             "A sunny day" if isinstance(a_good_thing, Sentinel) else a_good_thing
         )
 
+        a_pattern_validated_field = (
+            "vdurmont"
+            if isinstance(a_pattern_validated_field, Sentinel)
+            else a_pattern_validated_field
+        )
+
         return await EntTestObject2Mutator.create(
             vc=vc,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            a_pattern_validated_field=a_pattern_validated_field,
             some_field=some_field,
             thing_status=thing_status,
         ).gen_savex()
@@ -356,7 +395,7 @@ class EntTestObject2Example:
 
 def _get_field(field_name: str) -> Field:
     schema = EntTestObject2Schema()
-    fields = schema.get_fields()
+    fields = schema.get_all_fields()
     field = list(
         filter(
             lambda field: field.name == field_name,

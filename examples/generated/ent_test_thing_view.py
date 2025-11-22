@@ -10,13 +10,12 @@ from sqlalchemy import (
     Selectable,
 )
 from .ent_test_thing import EntTestThingModel
-from sqlalchemy import String
-from .ent_test_object2 import EntTestObject2Model
-from .ent_test_object import EntTestObjectModel
-from sqlalchemy import DateTime
-from sqlalchemy import Enum as DBEnum
 from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sqlalchemy import Enum as DBEnum
+from sqlalchemy import DateTime, String
 from ent_test_thing_pattern import ThingStatus
+from .ent_test_object import EntTestObjectModel
+from .ent_test_object2 import EntTestObject2Model
 
 
 view_query: Selectable = union_all(
@@ -25,6 +24,7 @@ view_query: Selectable = union_all(
         EntTestObject2Model.created_at,
         EntTestObject2Model.updated_at,
         EntTestObject2Model.a_good_thing,
+        EntTestObject2Model.a_pattern_validated_field,
         EntTestObject2Model.thing_status,
         literal_column("'EntTestObject2Model'").label("ent_type"),
     ),
@@ -33,6 +33,7 @@ view_query: Selectable = union_all(
         EntTestObjectModel.created_at,
         EntTestObjectModel.updated_at,
         EntTestObjectModel.a_good_thing,
+        EntTestObjectModel.a_pattern_validated_field,
         EntTestObjectModel.thing_status,
         literal_column("'EntTestObjectModel'").label("ent_type"),
     ),
@@ -69,6 +70,7 @@ _view_table = Table(
     Column("updated_at", DateTime(timezone=True)),
     Column("ent_type", String(50)),
     Column("a_good_thing", String(100), nullable=False),
+    Column("a_pattern_validated_field", String(100), nullable=True),
     Column("thing_status", DBEnum(ThingStatus, native_enum=True), nullable=True),
     info={"is_view": True},
 )
@@ -82,6 +84,7 @@ class EntTestThingView:
     updated_at = __table__.c.updated_at
     ent_type = __table__.c.ent_type
     a_good_thing = __table__.c.a_good_thing
+    a_pattern_validated_field = __table__.c.a_pattern_validated_field
     thing_status = __table__.c.thing_status
 
 

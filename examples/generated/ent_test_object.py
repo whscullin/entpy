@@ -18,30 +18,29 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy import JSON
+from .ent_model import EntModel
+from ent_test_object_schema import Status
+from sqlalchemy import Integer
+from sqlalchemy import ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import select, Select, func, Result
+from sqlalchemy import Text
 from sqlalchemy import String
+from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy import DateTime
 from .ent_test_thing import EntTestThingModel
-from typing import Any, TypeVar, Generic
-from entpy import Field, FieldWithDynamicExample
-from typing import TYPE_CHECKING
-from sqlalchemy import Integer
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from ent_test_thing_pattern import ThingStatus
-from sqlalchemy import Text
-from ent_test_object_schema import Status
-from sqlalchemy.orm import Mapped, mapped_column
-from sentinels import NOTHING, Sentinel  # type: ignore
 from ent_test_object_schema import EntTestObjectSchema
-from .ent_model import EntModel
-from sqlalchemy import Enum as DBEnum
-from sqlalchemy import select
-from sqlalchemy.sql.expression import ColumnElement
-from .ent_test_thing import IEntTestThing
-from sqlalchemy import ForeignKey
+from typing import TYPE_CHECKING
+from ent_test_thing_pattern import ThingStatus
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy import Boolean
-from sqlalchemy import Select, func, Result
-from sqlalchemy.dialects.postgresql import JSONB
+from .ent_test_thing import IEntTestThing
+from sqlalchemy import JSON
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy.orm import Mapped, mapped_column
+from entpy import Field, FieldWithDynamicExample
+from sqlalchemy import Enum as DBEnum
+from typing import Any, TypeVar, Generic
 
 if TYPE_CHECKING:
     from .ent_test_sub_object import EntTestSubObject
@@ -137,6 +136,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         This is the username that you will use on the platform.
         """
         return self.model.username
+
+    @property
+    def a_pattern_validated_field(self) -> str | None:
+        return self.model.a_pattern_validated_field
 
     @property
     def city(self) -> str | None:
@@ -398,6 +401,7 @@ class EntTestObjectMutator:
         firstname: str,
         required_sub_object_id: UUID,
         username: str,
+        a_pattern_validated_field: str | None = None,
         city: str | None = None,
         context: str | None = None,
         is_it_true: bool | None = None,
@@ -424,6 +428,7 @@ class EntTestObjectMutator:
             firstname=firstname,
             required_sub_object_id=required_sub_object_id,
             username=username,
+            a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
             is_it_true=is_it_true,
@@ -461,6 +466,7 @@ class EntTestObjectMutatorCreationAction:
     firstname: str
     required_sub_object_id: UUID
     username: str
+    a_pattern_validated_field: str | None = None
     city: str | None = None
     context: str | None = None
     is_it_true: bool | None = None
@@ -486,6 +492,7 @@ class EntTestObjectMutatorCreationAction:
         firstname: str,
         required_sub_object_id: UUID,
         username: str,
+        a_pattern_validated_field: str | None,
         city: str | None,
         context: str | None,
         is_it_true: bool | None,
@@ -509,6 +516,7 @@ class EntTestObjectMutatorCreationAction:
         self.firstname = firstname
         self.required_sub_object_id = required_sub_object_id
         self.username = username
+        self.a_pattern_validated_field = a_pattern_validated_field
         self.city = city
         self.context = context
         self.is_it_true = is_it_true
@@ -528,6 +536,15 @@ class EntTestObjectMutatorCreationAction:
     async def gen_savex(self) -> EntTestObject:
         session = get_session()
 
+        a_pattern_validated_field_validators = _get_field(
+            "a_pattern_validated_field"
+        )._validators
+        for validator in a_pattern_validated_field_validators:
+            if not validator.validate(self.a_pattern_validated_field):
+                raise ValidationError(
+                    "Invalid value for EntTestObject.a_pattern_validated_field"
+                )
+
         validated_field_validators = _get_field("validated_field")._validators
         for validator in validated_field_validators:
             if not validator.validate(self.validated_field):
@@ -540,6 +557,7 @@ class EntTestObjectMutatorCreationAction:
             firstname=self.firstname,
             required_sub_object_id=self.required_sub_object_id,
             username=self.username,
+            a_pattern_validated_field=self.a_pattern_validated_field,
             city=self.city,
             context=self.context,
             is_it_true=self.is_it_true,
@@ -570,6 +588,7 @@ class EntTestObjectMutatorUpdateAction:
     firstname: str
     required_sub_object_id: UUID
     username: str
+    a_pattern_validated_field: str | None = None
     city: str | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
@@ -592,6 +611,7 @@ class EntTestObjectMutatorUpdateAction:
         self.firstname = ent.firstname
         self.required_sub_object_id = ent.required_sub_object_id
         self.username = ent.username
+        self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.city = ent.city
         self.is_it_true = ent.is_it_true
         self.lastname = ent.lastname
@@ -610,6 +630,15 @@ class EntTestObjectMutatorUpdateAction:
     async def gen_savex(self) -> EntTestObject:
         session = get_session()
 
+        a_pattern_validated_field_validators = _get_field(
+            "a_pattern_validated_field"
+        )._validators
+        for validator in a_pattern_validated_field_validators:
+            if not validator.validate(self.a_pattern_validated_field):
+                raise ValidationError(
+                    "Invalid value for EntTestObject.a_pattern_validated_field"
+                )
+
         validated_field_validators = _get_field("validated_field")._validators
         for validator in validated_field_validators:
             if not validator.validate(self.validated_field):
@@ -620,6 +649,7 @@ class EntTestObjectMutatorUpdateAction:
         model.firstname = self.firstname
         model.required_sub_object_id = self.required_sub_object_id
         model.username = self.username
+        model.a_pattern_validated_field = self.a_pattern_validated_field
         model.city = self.city
         model.is_it_true = self.is_it_true
         model.lastname = self.lastname
@@ -667,6 +697,7 @@ class EntTestObjectExample:
         firstname: str | Sentinel = NOTHING,
         required_sub_object_id: UUID | Sentinel = NOTHING,
         username: str | Sentinel = NOTHING,
+        a_pattern_validated_field: str | None = None,
         city: str | None = None,
         context: str | None = None,
         is_it_true: bool | None = None,
@@ -711,6 +742,12 @@ class EntTestObjectExample:
             if generator:
                 username = generator()
 
+        a_pattern_validated_field = (
+            "vdurmont"
+            if isinstance(a_pattern_validated_field, Sentinel)
+            else a_pattern_validated_field
+        )
+
         city = "Los Angeles" if isinstance(city, Sentinel) else city
 
         context = (
@@ -751,6 +788,7 @@ class EntTestObjectExample:
             firstname=firstname,
             required_sub_object_id=required_sub_object_id,
             username=username,
+            a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
             is_it_true=is_it_true,
@@ -771,7 +809,7 @@ class EntTestObjectExample:
 
 def _get_field(field_name: str) -> Field:
     schema = EntTestObjectSchema()
-    fields = schema.get_fields()
+    fields = schema.get_all_fields()
     field = list(
         filter(
             lambda field: field.name == field_name,

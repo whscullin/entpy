@@ -18,17 +18,17 @@ from typing import Self
 from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
-from typing import Any, TypeVar, Generic
-from entpy import Field
-from sentinels import Sentinel  # type: ignore
 from .ent_model import EntModel
-from sqlalchemy.sql.expression import ColumnElement
-from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from typing import TYPE_CHECKING
-from sqlalchemy import select, Select, func, Result
 from ent_test_object4_schema import EntTestObject4Schema
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from entpy import Field
+from sqlalchemy import select, Select, func, Result
+from typing import TYPE_CHECKING
+from sqlalchemy.sql.expression import ColumnElement
+from typing import Any, TypeVar, Generic
+from sentinels import Sentinel  # type: ignore
 
 if TYPE_CHECKING:
     from .ent_test_object3 import EntTestObject3
@@ -334,7 +334,7 @@ class EntTestObject4Example:
 
 def _get_field(field_name: str) -> Field:
     schema = EntTestObject4Schema()
-    fields = schema.get_fields()
+    fields = schema.get_all_fields()
     field = list(
         filter(
             lambda field: field.name == field_name,

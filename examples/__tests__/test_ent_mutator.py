@@ -84,3 +84,17 @@ async def test_update_validated_field(vc: ExampleViewerContext) -> None:
     ent = await mut.gen_savex()
 
     assert ent.validated_field == "y_olo"
+
+
+async def test_update_validated_pattern_field(vc: ExampleViewerContext) -> None:
+    ent = await EntTestObjectExample.gen_create(vc=vc)
+
+    mut = EntTestObjectMutator.update(vc, ent)
+    mut.a_pattern_validated_field = "Yolo"
+    with pytest.raises(ValidationError):
+        await mut.gen_savex()
+
+    mut.a_pattern_validated_field = "yolo"
+    ent = await mut.gen_savex()
+
+    assert ent.a_pattern_validated_field == "yolo"
