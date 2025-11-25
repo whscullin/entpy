@@ -74,7 +74,7 @@ class {i}{base_name}Query(EntQuery[{i}{base_name}, {generic}]):
     
     async def gen_count_NO_PRIVACY(self) -> int:
         session = {session_getter_fn_name}()
-        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        count_query = self.query.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
         result = await session.execute(count_query)
         count = result.scalar()
         if count is None:

@@ -16,27 +16,28 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from ent_test_thing_pattern import ThingStatus
-from sqlalchemy import Boolean
-from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
-from .ent_test_thing import IEntTestThing
-from sqlalchemy import select, func, Result
-from sqlalchemy import Enum as DBEnum
-from typing import TypeVar
-from ent_test_object_schema import EntTestObjectSchema
-from sqlalchemy import JSON
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import ForeignKey
-from sqlalchemy import DateTime
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from entpy import Field, FieldWithDynamicExample
+from .ent_test_thing import IEntTestThing
+from sqlalchemy import Boolean
 from sqlalchemy import Integer
 from ent_test_object_schema import Status
+from entpy import Field, FieldWithDynamicExample
+from sqlalchemy import JSON
+from sqlalchemy import DateTime
+from sqlalchemy import Text
 from .ent_test_thing import EntTestThingModel
+from sqlalchemy import select
+from ent_test_object_schema import EntTestObjectSchema
+from ent_test_thing_pattern import ThingStatus
+from typing import TypeVar
 from .ent_query import EntQuery
+from sqlalchemy import func, Result
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Enum as DBEnum
 from typing import TYPE_CHECKING
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy import String
 
 if TYPE_CHECKING:
@@ -349,7 +350,9 @@ class EntTestObjectQuery(EntQuery[EntTestObject, EntTestObjectModel]):
 
     async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        count_query = self.query.with_only_columns(
+            func.count(), maintain_column_froms=True
+        ).order_by(None)
         result = await session.execute(count_query)
         count = result.scalar()
         if count is None:

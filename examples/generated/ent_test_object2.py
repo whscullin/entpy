@@ -16,17 +16,17 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from ent_test_thing_pattern import ThingStatus
-from .ent_test_thing import EntTestThingModel
-from .ent_test_thing import IEntTestThing
-from sqlalchemy import select, func, Result
-from sentinels import NOTHING, Sentinel  # type: ignore
-from .ent_query import EntQuery
-from typing import TypeVar
 from sqlalchemy.orm import Mapped, mapped_column
+from .ent_test_thing import IEntTestThing
+from typing import TypeVar
+from .ent_query import EntQuery
+from ent_test_thing_pattern import ThingStatus
 from ent_test_object2_schema import EntTestObject2Schema
+from sentinels import NOTHING, Sentinel  # type: ignore
 from entpy import Field
+from sqlalchemy import select, func, Result
 from sqlalchemy import String
+from .ent_test_thing import EntTestThingModel
 
 
 class EntTestObject2Model(EntTestThingModel):
@@ -173,7 +173,9 @@ class EntTestObject2Query(EntQuery[EntTestObject2, EntTestObject2Model]):
 
     async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        count_query = self.query.with_only_columns(
+            func.count(), maintain_column_froms=True
+        ).order_by(None)
         result = await session.execute(count_query)
         count = result.scalar()
         if count is None:

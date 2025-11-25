@@ -8,18 +8,18 @@ from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
+from sqlalchemy.orm import Mapped, mapped_column
 from ent_test_thing_pattern import ThingStatus
 from entpy import EntNotFoundError, ExecutionError
-from typing import cast
-from sqlalchemy import select, func, Result
-from database import get_session
-from sqlalchemy import String
-from sqlalchemy import Enum as DBEnum
 from typing import TypeVar
 from .ent_query import EntQuery
-from sqlalchemy.orm import Mapped, mapped_column
-from evc import ExampleViewerContext
 from .ent_model import EntModel
+from database import get_session
+from evc import ExampleViewerContext
+from sqlalchemy import Enum as DBEnum
+from typing import cast
+from sqlalchemy import select, func, Result
+from sqlalchemy import String
 
 
 class EntTestThingModel(EntModel):
@@ -158,7 +158,9 @@ class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
 
     async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        count_query = self.query.with_only_columns(
+            func.count(), maintain_column_froms=True
+        ).order_by(None)
         result = await session.execute(count_query)
         count = result.scalar()
         if count is None:

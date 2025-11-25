@@ -16,15 +16,15 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy import select, func, Result
-from sentinels import NOTHING, Sentinel  # type: ignore
-from .ent_query import EntQuery
-from typing import TypeVar
 from sqlalchemy.orm import Mapped, mapped_column
-from .ent_model import EntModel
-from entpy import Field
-from sqlalchemy import String
+from typing import TypeVar
+from .ent_query import EntQuery
 from ent_grand_parent_schema import EntGrandParentSchema
+from .ent_model import EntModel
+from sentinels import NOTHING, Sentinel  # type: ignore
+from entpy import Field
+from sqlalchemy import select, func, Result
+from sqlalchemy import String
 
 
 class EntGrandParentModel(EntModel):
@@ -159,7 +159,9 @@ class EntGrandParentQuery(EntQuery[EntGrandParent, EntGrandParentModel]):
 
     async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        count_query = self.query.with_only_columns(
+            func.count(), maintain_column_froms=True
+        ).order_by(None)
         result = await session.execute(count_query)
         count = result.scalar()
         if count is None:

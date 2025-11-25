@@ -12,10 +12,10 @@ from sqlalchemy import (
 from .ent_test_thing import EntTestThingModel
 from ent_test_thing_pattern import ThingStatus
 from .ent_test_object import EntTestObjectModel
-from .ent_test_object2 import EntTestObject2Model
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import DateTime, String
+from .ent_test_object2 import EntTestObject2Model
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
 
 
 view_query: Selectable = union_all(
