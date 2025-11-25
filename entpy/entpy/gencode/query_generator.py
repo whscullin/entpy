@@ -15,6 +15,7 @@ def generate(
         "from typing import Any, TypeVar, Generic",
         "from sqlalchemy import select, Select, func, Result",
         "from entpy import EntNotFoundError, ExecutionError",
+        "from .ent_query import EntQuery",
     ]
 
     if is_pattern:
@@ -40,31 +41,7 @@ def generate(
         code=f"""
 T = TypeVar("T")
 
-class {i}{base_name}Query(ABC, Generic[T]):
-    query: Select[tuple[T]]
-
-    def join(self, model_class: type[EntModel], predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.join(model_class, predicate)
-        return self
-
-    def where(self, predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.where(predicate)
-        return self
-
-    def order_by(self, predicate: ColumnElement[Any]) -> Self:
-        self.query = self.query.order_by(predicate)
-        return self
-
-    def limit(self, limit: int) -> Self:
-        self.query = self.query.limit(limit)
-        return self
-
-    def offset(self, offset: int) -> Self:
-        self.query = self.query.offset(offset)
-        return self
-
-
-class {i}{base_name}ListQuery({i}{base_name}Query[{generic}]):
+class {i}{base_name}Query(EntQuery[{i}{base_name}, {generic}]):
     vc: {vc_name}
 
     def __init__(self, vc: {vc_name}) -> None:
@@ -94,15 +71,11 @@ class {i}{base_name}ListQuery({i}{base_name}Query[{generic}]):
         if not ent:
             raise EntNotFoundError(f"Expected query to return an ent, got None.")
         return ent
-
-class {i}{base_name}CountQuery({i}{base_name}Query[int]):
-    def __init__(self) -> None:
-        {view_import}
-        self.query = select(func.count()).select_from({query_target})
-
-    async def gen_NO_PRIVACY(self) -> int:
+    
+    async def gen_count_NO_PRIVACY(self) -> int:
         session = {session_getter_fn_name}()
-        result = await session.execute(self.query)
+        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        result = await session.execute(count_query)
         count = result.scalar()
         if count is None:
             raise ExecutionError("Unable to get the count")

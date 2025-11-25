@@ -108,12 +108,8 @@ class I{base_name}(Ent):{get_description(pattern)}
         raise ValueError(f"No {base_name} found for ID {{ent_id}}")
 
     @classmethod
-    def query_{to_snake_case(base_name)}(cls, vc: {vc_name}) -> I{base_name}ListQuery:
-        return I{base_name}ListQuery(vc=vc)
-
-    @classmethod
-    def query_{to_snake_case(base_name)}_count(cls, vc: {vc_name}) -> I{base_name}CountQuery:
-        return I{base_name}CountQuery()
+    def query_{to_snake_case(base_name)}(cls, vc: {vc_name}) -> I{base_name}Query:
+        return I{base_name}Query(vc=vc)
 
 {query_content.code}
 

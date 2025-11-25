@@ -5,6 +5,7 @@ from pathlib import Path
 
 from entpy import Pattern, Schema
 from entpy.gencode.model_base_template import generate as generate_base_model
+from entpy.gencode.ent_query_template import generate as generate_ent_query
 from entpy.gencode.pattern_generator import generate as generate_pattern
 from entpy.gencode.schema_generator import generate as generate_schema
 from entpy.gencode.view_generator import generate as generate_view
@@ -28,9 +29,11 @@ def run(
     # Create output directory if it doesn't exist
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # Generate base model that all models will inherit from
+    # Generate base model that all models will inherit from, and the ent_query
     base_model = generate_base_model(base_import=base_import)
     _write_file(output_path / "ent_model.py", base_model)
+    ent_query = generate_ent_query()
+    _write_file(output_path / "ent_query.py", ent_query)
 
     # Load all descriptors to process
     configs = _load_descriptors_configs(

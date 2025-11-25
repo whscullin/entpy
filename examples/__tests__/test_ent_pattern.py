@@ -54,22 +54,22 @@ async def test_query_across_schemas(vc: ExampleViewerContext) -> None:
     assert ent.id == red.id
 
     count = (
-        await IEntTestThing.query_ent_test_thing_count(vc)
+        await IEntTestThing.query_ent_test_thing(vc)
         .where(EntTestThingView.a_good_thing.startswith("y"))
-        .gen_NO_PRIVACY()
+        .gen_count_NO_PRIVACY()
     )
     assert count == 1
 
     count = (
-        await IEntTestThing.query_ent_test_thing_count(vc)
+        await IEntTestThing.query_ent_test_thing(vc)
         .where(EntTestThingView.a_good_thing.startswith("b"))
-        .gen_NO_PRIVACY()
+        .gen_count_NO_PRIVACY()
     )
     assert count == 2
 
     count = (
-        await IEntTestThing.query_ent_test_thing_count(vc)
+        await IEntTestThing.query_ent_test_thing(vc)
         .where(EntTestThingView.a_good_thing.startswith("v"))
-        .gen_NO_PRIVACY()
+        .gen_count_NO_PRIVACY()
     )
     assert count == 0

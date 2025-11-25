@@ -97,9 +97,9 @@ async def test_ent_query_count(vc: ExampleViewerContext) -> None:
     await EntTestObjectExample.gen_create(vc)
 
     results = (
-        await EntTestObject.query_count(vc)
+        await EntTestObject.query(vc)
         .where(EntTestObjectModel.firstname == firstname)
-        .gen_NO_PRIVACY()
+        .gen_count_NO_PRIVACY()
     )
 
     assert results == 3

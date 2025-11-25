@@ -14,33 +14,30 @@ from entpy import (
 )
 from uuid import UUID
 from datetime import datetime, UTC
-from typing import Self
-from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from .ent_model import EntModel
-from ent_test_object_schema import Status
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import select, Select, func, Result
-from sqlalchemy import Text
-from sqlalchemy import String
-from sqlalchemy.sql.expression import ColumnElement
-from sqlalchemy import DateTime
-from .ent_test_thing import EntTestThingModel
-from ent_test_object_schema import EntTestObjectSchema
-from typing import TYPE_CHECKING
 from ent_test_thing_pattern import ThingStatus
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy import Boolean
-from .ent_test_thing import IEntTestThing
-from sqlalchemy import JSON
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
-from entpy import Field, FieldWithDynamicExample
+from .ent_test_thing import IEntTestThing
+from sqlalchemy import select, func, Result
 from sqlalchemy import Enum as DBEnum
-from typing import Any, TypeVar, Generic
+from typing import TypeVar
+from ent_test_object_schema import EntTestObjectSchema
+from sqlalchemy import JSON
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from entpy import Field, FieldWithDynamicExample
+from sqlalchemy import Integer
+from ent_test_object_schema import Status
+from .ent_test_thing import EntTestThingModel
+from .ent_query import EntQuery
+from typing import TYPE_CHECKING
+from sqlalchemy import String
 
 if TYPE_CHECKING:
     from .ent_test_sub_object import EntTestSubObject
@@ -306,42 +303,14 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         return ent
 
     @classmethod
-    def query(cls, vc: ExampleViewerContext) -> EntTestObjectListQuery:
-        return EntTestObjectListQuery(vc=vc)
-
-    @classmethod
-    def query_count(cls, vc: ExampleViewerContext) -> EntTestObjectCountQuery:
-        return EntTestObjectCountQuery()
+    def query(cls, vc: ExampleViewerContext) -> EntTestObjectQuery:
+        return EntTestObjectQuery(vc=vc)
 
 
 T = TypeVar("T")
 
 
-class EntTestObjectQuery(ABC, Generic[T]):
-    query: Select[tuple[T]]
-
-    def join(self, model_class: type[EntModel], predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.join(model_class, predicate)
-        return self
-
-    def where(self, predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.where(predicate)
-        return self
-
-    def order_by(self, predicate: ColumnElement[Any]) -> Self:
-        self.query = self.query.order_by(predicate)
-        return self
-
-    def limit(self, limit: int) -> Self:
-        self.query = self.query.limit(limit)
-        return self
-
-    def offset(self, offset: int) -> Self:
-        self.query = self.query.offset(offset)
-        return self
-
-
-class EntTestObjectListQuery(EntTestObjectQuery[EntTestObjectModel]):
+class EntTestObjectQuery(EntQuery[EntTestObject, EntTestObjectModel]):
     vc: ExampleViewerContext
 
     def __init__(self, vc: ExampleViewerContext) -> None:
@@ -378,14 +347,10 @@ class EntTestObjectListQuery(EntTestObjectQuery[EntTestObjectModel]):
             raise EntNotFoundError("Expected query to return an ent, got None.")
         return ent
 
-
-class EntTestObjectCountQuery(EntTestObjectQuery[int]):
-    def __init__(self) -> None:
-        self.query = select(func.count()).select_from(EntTestObjectModel)
-
-    async def gen_NO_PRIVACY(self) -> int:
+    async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        result = await session.execute(self.query)
+        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        result = await session.execute(count_query)
         count = result.scalar()
         if count is None:
             raise ExecutionError("Unable to get the count")

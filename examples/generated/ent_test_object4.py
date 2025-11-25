@@ -14,21 +14,19 @@ from entpy import (
 )
 from uuid import UUID
 from datetime import datetime, UTC
-from typing import Self
-from abc import ABC
 from evc import ExampleViewerContext
 from database import get_session
-from .ent_model import EntModel
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from ent_test_object4_schema import EntTestObject4Schema
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey
-from entpy import Field
-from sqlalchemy import select, Select, func, Result
-from typing import TYPE_CHECKING
-from sqlalchemy.sql.expression import ColumnElement
-from typing import Any, TypeVar, Generic
+from sqlalchemy import select, func, Result
 from sentinels import Sentinel  # type: ignore
+from .ent_query import EntQuery
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from typing import TypeVar
+from typing import TYPE_CHECKING
+from sqlalchemy.orm import Mapped, mapped_column
+from ent_test_object4_schema import EntTestObject4Schema
+from entpy import Field
+from .ent_model import EntModel
 
 if TYPE_CHECKING:
     from .ent_test_object3 import EntTestObject3
@@ -127,42 +125,14 @@ class EntTestObject4(Ent[ExampleViewerContext]):
         return ent
 
     @classmethod
-    def query(cls, vc: ExampleViewerContext) -> EntTestObject4ListQuery:
-        return EntTestObject4ListQuery(vc=vc)
-
-    @classmethod
-    def query_count(cls, vc: ExampleViewerContext) -> EntTestObject4CountQuery:
-        return EntTestObject4CountQuery()
+    def query(cls, vc: ExampleViewerContext) -> EntTestObject4Query:
+        return EntTestObject4Query(vc=vc)
 
 
 T = TypeVar("T")
 
 
-class EntTestObject4Query(ABC, Generic[T]):
-    query: Select[tuple[T]]
-
-    def join(self, model_class: type[EntModel], predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.join(model_class, predicate)
-        return self
-
-    def where(self, predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.where(predicate)
-        return self
-
-    def order_by(self, predicate: ColumnElement[Any]) -> Self:
-        self.query = self.query.order_by(predicate)
-        return self
-
-    def limit(self, limit: int) -> Self:
-        self.query = self.query.limit(limit)
-        return self
-
-    def offset(self, offset: int) -> Self:
-        self.query = self.query.offset(offset)
-        return self
-
-
-class EntTestObject4ListQuery(EntTestObject4Query[EntTestObject4Model]):
+class EntTestObject4Query(EntQuery[EntTestObject4, EntTestObject4Model]):
     vc: ExampleViewerContext
 
     def __init__(self, vc: ExampleViewerContext) -> None:
@@ -201,14 +171,10 @@ class EntTestObject4ListQuery(EntTestObject4Query[EntTestObject4Model]):
             raise EntNotFoundError("Expected query to return an ent, got None.")
         return ent
 
-
-class EntTestObject4CountQuery(EntTestObject4Query[int]):
-    def __init__(self) -> None:
-        self.query = select(func.count()).select_from(EntTestObject4Model)
-
-    async def gen_NO_PRIVACY(self) -> int:
+    async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        result = await session.execute(self.query)
+        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        result = await session.execute(count_query)
         count = result.scalar()
         if count is None:
             raise ExecutionError("Unable to get the count")

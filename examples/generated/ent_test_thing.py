@@ -3,24 +3,23 @@
 ####################
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
-from typing import Self
-from .ent_model import EntModel
-from database import get_session
-from evc import ExampleViewerContext
-from sqlalchemy.orm import Mapped, mapped_column
-from typing import cast
-from sqlalchemy import Enum as DBEnum
-from sqlalchemy import select, Select, func, Result
-from sqlalchemy import String
-from entpy import EntNotFoundError, ExecutionError
-from sqlalchemy.sql.expression import ColumnElement
-from typing import Any, TypeVar, Generic
 from ent_test_thing_pattern import ThingStatus
+from entpy import EntNotFoundError, ExecutionError
+from typing import cast
+from sqlalchemy import select, func, Result
+from database import get_session
+from sqlalchemy import String
+from sqlalchemy import Enum as DBEnum
+from typing import TypeVar
+from .ent_query import EntQuery
+from sqlalchemy.orm import Mapped, mapped_column
+from evc import ExampleViewerContext
+from .ent_model import EntModel
 
 
 class EntTestThingModel(EntModel):
@@ -104,44 +103,14 @@ class IEntTestThing(Ent):
         raise ValueError(f"No EntTestThing found for ID {ent_id}")
 
     @classmethod
-    def query_ent_test_thing(cls, vc: ExampleViewerContext) -> IEntTestThingListQuery:
-        return IEntTestThingListQuery(vc=vc)
-
-    @classmethod
-    def query_ent_test_thing_count(
-        cls, vc: ExampleViewerContext
-    ) -> IEntTestThingCountQuery:
-        return IEntTestThingCountQuery()
+    def query_ent_test_thing(cls, vc: ExampleViewerContext) -> IEntTestThingQuery:
+        return IEntTestThingQuery(vc=vc)
 
 
 T = TypeVar("T")
 
 
-class IEntTestThingQuery(ABC, Generic[T]):
-    query: Select[tuple[T]]
-
-    def join(self, model_class: type[EntModel], predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.join(model_class, predicate)
-        return self
-
-    def where(self, predicate: ColumnElement[bool]) -> Self:
-        self.query = self.query.where(predicate)
-        return self
-
-    def order_by(self, predicate: ColumnElement[Any]) -> Self:
-        self.query = self.query.order_by(predicate)
-        return self
-
-    def limit(self, limit: int) -> Self:
-        self.query = self.query.limit(limit)
-        return self
-
-    def offset(self, offset: int) -> Self:
-        self.query = self.query.offset(offset)
-        return self
-
-
-class IEntTestThingListQuery(IEntTestThingQuery[UUID]):
+class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
     vc: ExampleViewerContext
 
     def __init__(self, vc: ExampleViewerContext) -> None:
@@ -187,16 +156,10 @@ class IEntTestThingListQuery(IEntTestThingQuery[UUID]):
             raise EntNotFoundError("Expected query to return an ent, got None.")
         return ent
 
-
-class IEntTestThingCountQuery(IEntTestThingQuery[int]):
-    def __init__(self) -> None:
-        from .ent_test_thing_view import EntTestThingView
-
-        self.query = select(func.count()).select_from(EntTestThingView.__table__)
-
-    async def gen_NO_PRIVACY(self) -> int:
+    async def gen_count_NO_PRIVACY(self) -> int:
         session = get_session()
-        result = await session.execute(self.query)
+        count_query = self.query.with_only_columns(func.count()).order_by(None)
+        result = await session.execute(count_query)
         count = result.scalar()
         if count is None:
             raise ExecutionError("Unable to get the count")
