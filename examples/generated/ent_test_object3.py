@@ -16,17 +16,17 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
+from typing import TypeVar
+from sqlalchemy import select, func, Result
+from .ent_query import EntQuery
+from typing import TYPE_CHECKING
+from sentinels import Sentinel  # type: ignore
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from entpy import Field
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey
-from typing import TypeVar
-from .ent_query import EntQuery
-from .ent_model import EntModel
-from sentinels import Sentinel  # type: ignore
-from typing import TYPE_CHECKING
-from entpy import Field
-from sqlalchemy import select, func, Result
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from ent_test_object3_schema import EntTestObject3Schema
+from .ent_model import EntModel
 
 if TYPE_CHECKING:
     from .ent_test_object4 import EntTestObject4

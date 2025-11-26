@@ -7,6 +7,7 @@ from generated.ent_test_object import (
     EntTestObjectMutator,
 )
 from generated.ent_test_sub_object import EntTestSubObject  # noqa: F401
+from generated.ent_test_object5 import EntTestObject5Example
 from evc import ExampleViewerContext
 from entpy import ValidationError
 
@@ -18,6 +19,7 @@ async def test_creation(vc: ExampleViewerContext) -> None:
         username="vdurmont",
         firstname="Vincent",
         required_sub_object_id=uuid.uuid4(),
+        obj5_id=(await EntTestObject5Example.gen_create(vc)).id,
     ).gen_savex()
 
     assert ent is not None, "create should create the ent"
@@ -62,6 +64,7 @@ async def test_creation_with_assigned_id(vc: ExampleViewerContext) -> None:
         username="vdurmont2",
         firstname="Vincent",
         required_sub_object_id=uuid.uuid4(),
+        obj5_id=(await EntTestObject5Example.gen_create(vc)).id,
     ).gen_savex()
 
     assert ent.id == custom_uuid, "Mutator.create should honor custom uuids"

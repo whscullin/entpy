@@ -16,31 +16,31 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime
+from sqlalchemy import select, func, Result
+from sqlalchemy import Text
+from .ent_query import EntQuery
+from sqlalchemy.dialects.postgresql import JSONB
+from sentinels import NOTHING, Sentinel  # type: ignore
+from ent_test_thing_pattern import ThingStatus
+from ent_test_object_schema import EntTestObjectSchema
+from sqlalchemy import JSON
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from entpy import Field, FieldWithDynamicExample
 from .ent_test_thing import IEntTestThing
 from sqlalchemy import Boolean
-from sqlalchemy import Integer
-from ent_test_object_schema import Status
-from entpy import Field, FieldWithDynamicExample
-from sqlalchemy import JSON
-from sqlalchemy import DateTime
-from sqlalchemy import Text
-from .ent_test_thing import EntTestThingModel
-from sqlalchemy import select
-from ent_test_object_schema import EntTestObjectSchema
-from ent_test_thing_pattern import ThingStatus
+from sqlalchemy import ForeignKey
 from typing import TypeVar
-from .ent_query import EntQuery
-from sqlalchemy import func, Result
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import Enum as DBEnum
-from typing import TYPE_CHECKING
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from sentinels import NOTHING, Sentinel  # type: ignore
+from ent_test_object_schema import Status
+from sqlalchemy import Integer
+from .ent_test_thing import EntTestThingModel
 from sqlalchemy import String
+from typing import TYPE_CHECKING
+from sqlalchemy import Enum as DBEnum
+from sqlalchemy.orm import Mapped, mapped_column
 
 if TYPE_CHECKING:
+    from .ent_test_object5 import EntTestObject5
     from .ent_test_sub_object import EntTestSubObject
     from .ent_test_thing import IEntTestThing
 
@@ -120,6 +120,15 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         return self.model.firstname
 
     @property
+    def obj5_id(self) -> UUID:
+        return self.model.obj5_id
+
+    async def gen_obj5(self) -> EntTestObject5:
+        from .ent_test_object5 import EntTestObject5
+
+        return await EntTestObject5.genx(self.vc, self.model.obj5_id)
+
+    @property
     def required_sub_object_id(self) -> UUID:
         return self.model.required_sub_object_id
 
@@ -154,6 +163,17 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def lastname(self) -> str | None:
         return self.model.lastname
+
+    @property
+    def obj5_opt_id(self) -> UUID | None:
+        return self.model.obj5_opt_id
+
+    async def gen_obj5_opt(self) -> "EntTestObject5" | None:
+        from .ent_test_object5 import EntTestObject5
+
+        if self.model.obj5_opt_id:
+            return await EntTestObject5.gen(self.vc, self.model.obj5_opt_id)
+        return None
 
     @property
     def optional_sub_object_id(self) -> UUID | None:
@@ -367,6 +387,7 @@ class EntTestObjectMutator:
         vc: ExampleViewerContext,
         a_good_thing: str,
         firstname: str,
+        obj5_id: UUID,
         required_sub_object_id: UUID,
         username: str,
         a_pattern_validated_field: str | None = None,
@@ -374,6 +395,7 @@ class EntTestObjectMutator:
         context: str | None = None,
         is_it_true: bool | None = None,
         lastname: str | None = None,
+        obj5_opt_id: UUID | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
         sadness: Status | None = None,
@@ -394,6 +416,7 @@ class EntTestObjectMutator:
             created_at=created_at,
             a_good_thing=a_good_thing,
             firstname=firstname,
+            obj5_id=obj5_id,
             required_sub_object_id=required_sub_object_id,
             username=username,
             a_pattern_validated_field=a_pattern_validated_field,
@@ -401,6 +424,7 @@ class EntTestObjectMutator:
             context=context,
             is_it_true=is_it_true,
             lastname=lastname,
+            obj5_opt_id=obj5_opt_id,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
             sadness=sadness,
@@ -432,6 +456,7 @@ class EntTestObjectMutatorCreationAction:
     id: UUID
     a_good_thing: str
     firstname: str
+    obj5_id: UUID
     required_sub_object_id: UUID
     username: str
     a_pattern_validated_field: str | None = None
@@ -439,6 +464,7 @@ class EntTestObjectMutatorCreationAction:
     context: str | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
+    obj5_opt_id: UUID | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
     sadness: Status | None = None
@@ -458,6 +484,7 @@ class EntTestObjectMutatorCreationAction:
         created_at: datetime | None,
         a_good_thing: str,
         firstname: str,
+        obj5_id: UUID,
         required_sub_object_id: UUID,
         username: str,
         a_pattern_validated_field: str | None,
@@ -465,6 +492,7 @@ class EntTestObjectMutatorCreationAction:
         context: str | None,
         is_it_true: bool | None,
         lastname: str | None,
+        obj5_opt_id: UUID | None,
         optional_sub_object_id: UUID | None,
         optional_sub_object_no_ex_id: UUID | None,
         sadness: Status | None,
@@ -482,6 +510,7 @@ class EntTestObjectMutatorCreationAction:
         self.id = id if id else generate_uuid(EntTestObject, self.created_at)
         self.a_good_thing = a_good_thing
         self.firstname = firstname
+        self.obj5_id = obj5_id
         self.required_sub_object_id = required_sub_object_id
         self.username = username
         self.a_pattern_validated_field = a_pattern_validated_field
@@ -489,6 +518,7 @@ class EntTestObjectMutatorCreationAction:
         self.context = context
         self.is_it_true = is_it_true
         self.lastname = lastname
+        self.obj5_opt_id = obj5_opt_id
         self.optional_sub_object_id = optional_sub_object_id
         self.optional_sub_object_no_ex_id = optional_sub_object_no_ex_id
         self.sadness = sadness
@@ -523,6 +553,7 @@ class EntTestObjectMutatorCreationAction:
             created_at=self.created_at,
             a_good_thing=self.a_good_thing,
             firstname=self.firstname,
+            obj5_id=self.obj5_id,
             required_sub_object_id=self.required_sub_object_id,
             username=self.username,
             a_pattern_validated_field=self.a_pattern_validated_field,
@@ -530,6 +561,7 @@ class EntTestObjectMutatorCreationAction:
             context=self.context,
             is_it_true=self.is_it_true,
             lastname=self.lastname,
+            obj5_opt_id=self.obj5_opt_id,
             optional_sub_object_id=self.optional_sub_object_id,
             optional_sub_object_no_ex_id=self.optional_sub_object_no_ex_id,
             sadness=self.sadness,
@@ -554,12 +586,14 @@ class EntTestObjectMutatorUpdateAction:
     id: UUID
     a_good_thing: str
     firstname: str
+    obj5_id: UUID
     required_sub_object_id: UUID
     username: str
     a_pattern_validated_field: str | None = None
     city: str | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
+    obj5_opt_id: UUID | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
     sadness: Status | None = None
@@ -577,12 +611,14 @@ class EntTestObjectMutatorUpdateAction:
         self.ent = ent
         self.a_good_thing = ent.a_good_thing
         self.firstname = ent.firstname
+        self.obj5_id = ent.obj5_id
         self.required_sub_object_id = ent.required_sub_object_id
         self.username = ent.username
         self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.city = ent.city
         self.is_it_true = ent.is_it_true
         self.lastname = ent.lastname
+        self.obj5_opt_id = ent.obj5_opt_id
         self.optional_sub_object_id = ent.optional_sub_object_id
         self.optional_sub_object_no_ex_id = ent.optional_sub_object_no_ex_id
         self.sadness = ent.sadness
@@ -615,12 +651,14 @@ class EntTestObjectMutatorUpdateAction:
         model = self.ent.model
         model.a_good_thing = self.a_good_thing
         model.firstname = self.firstname
+        model.obj5_id = self.obj5_id
         model.required_sub_object_id = self.required_sub_object_id
         model.username = self.username
         model.a_pattern_validated_field = self.a_pattern_validated_field
         model.city = self.city
         model.is_it_true = self.is_it_true
         model.lastname = self.lastname
+        model.obj5_opt_id = self.obj5_opt_id
         model.optional_sub_object_id = self.optional_sub_object_id
         model.optional_sub_object_no_ex_id = self.optional_sub_object_no_ex_id
         model.sadness = self.sadness
@@ -663,6 +701,7 @@ class EntTestObjectExample:
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
         firstname: str | Sentinel = NOTHING,
+        obj5_id: UUID | Sentinel = NOTHING,
         required_sub_object_id: UUID | Sentinel = NOTHING,
         username: str | Sentinel = NOTHING,
         a_pattern_validated_field: str | None = None,
@@ -670,6 +709,7 @@ class EntTestObjectExample:
         context: str | None = None,
         is_it_true: bool | None = None,
         lastname: str | None = None,
+        obj5_opt_id: UUID | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
         sadness: Status | None = None,
@@ -689,6 +729,12 @@ class EntTestObjectExample:
         )
 
         firstname = "Vincent" if isinstance(firstname, Sentinel) else firstname
+
+        if isinstance(obj5_id, Sentinel) or obj5_id is None:
+            from .ent_test_object5 import EntTestObject5Example
+
+            obj5_id_ent = await EntTestObject5Example.gen_create(vc)
+            obj5_id = obj5_id_ent.id
 
         if (
             isinstance(required_sub_object_id, Sentinel)
@@ -724,6 +770,12 @@ class EntTestObjectExample:
 
         is_it_true = False if isinstance(is_it_true, Sentinel) else is_it_true
 
+        if isinstance(obj5_opt_id, Sentinel) or obj5_opt_id is None:
+            from .ent_test_object5 import EntTestObject5Example
+
+            obj5_opt_id_ent = await EntTestObject5Example.gen_create(vc)
+            obj5_opt_id = obj5_opt_id_ent.id
+
         if (
             isinstance(optional_sub_object_id, Sentinel)
             or optional_sub_object_id is None
@@ -754,6 +806,7 @@ class EntTestObjectExample:
             created_at=created_at,
             a_good_thing=a_good_thing,
             firstname=firstname,
+            obj5_id=obj5_id,
             required_sub_object_id=required_sub_object_id,
             username=username,
             a_pattern_validated_field=a_pattern_validated_field,
@@ -761,6 +814,7 @@ class EntTestObjectExample:
             context=context,
             is_it_true=is_it_true,
             lastname=lastname,
+            obj5_opt_id=obj5_opt_id,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
             sadness=sadness,

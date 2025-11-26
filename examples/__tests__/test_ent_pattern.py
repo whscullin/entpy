@@ -7,6 +7,7 @@ from generated.ent_test_object2 import (
 )
 from generated.ent_test_thing import IEntTestThing
 from generated.ent_test_thing_view import EntTestThingView
+from generated.ent_test_object5 import EntTestObject5Example
 from evc import ExampleViewerContext
 
 
@@ -73,3 +74,18 @@ async def test_query_across_schemas(vc: ExampleViewerContext) -> None:
         .gen_count_NO_PRIVACY()
     )
     assert count == 0
+
+
+async def test_query_pattern_edge(vc: ExampleViewerContext) -> None:
+    obj5_1 = await EntTestObject5Example.gen_create(vc=vc)
+    obj5_2 = await EntTestObject5Example.gen_create(vc=vc)
+    obj = await EntTestObjectExample.gen_create(
+        vc=vc, obj5_id=obj5_1.id, obj5_opt_id=obj5_2.id
+    )
+    thing = await IEntTestThing.genx(vc, obj.id)
+
+    non_opt = await thing.gen_obj5()
+    opt = await thing.gen_obj5_opt()
+    assert non_opt.id == obj5_1.id
+    assert opt is not None
+    assert opt.id == obj5_2.id

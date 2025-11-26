@@ -16,15 +16,15 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
-from .ent_query import EntQuery
-from ent_grand_parent_schema import EntGrandParentSchema
-from .ent_model import EntModel
-from sentinels import NOTHING, Sentinel  # type: ignore
-from entpy import Field
 from sqlalchemy import select, func, Result
 from sqlalchemy import String
+from .ent_query import EntQuery
+from sentinels import NOTHING, Sentinel  # type: ignore
+from entpy import Field
+from sqlalchemy.orm import Mapped, mapped_column
+from ent_grand_parent_schema import EntGrandParentSchema
+from .ent_model import EntModel
 
 
 class EntGrandParentModel(EntModel):

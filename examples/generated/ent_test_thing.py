@@ -8,26 +8,39 @@ from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
-from sqlalchemy.orm import Mapped, mapped_column
-from ent_test_thing_pattern import ThingStatus
-from entpy import EntNotFoundError, ExecutionError
 from typing import TypeVar
-from .ent_query import EntQuery
-from .ent_model import EntModel
-from database import get_session
-from evc import ExampleViewerContext
-from sqlalchemy import Enum as DBEnum
-from typing import cast
 from sqlalchemy import select, func, Result
 from sqlalchemy import String
+from typing import cast
+from .ent_query import EntQuery
+from database import get_session
+from sqlalchemy import Enum as DBEnum
+from entpy import EntNotFoundError, ExecutionError
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from ent_test_thing_pattern import ThingStatus
+from evc import ExampleViewerContext
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from .ent_model import EntModel
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .ent_test_object5 import EntTestObject5
 
 
 class EntTestThingModel(EntModel):
     __abstract__ = True
 
     a_good_thing: Mapped[str] = mapped_column(String(100), nullable=False)
+    obj5_id: Mapped[UUID] = mapped_column(
+        DBUUID(as_uuid=True), ForeignKey("test_object5.id"), nullable=False
+    )
     a_pattern_validated_field: Mapped[str | None] = mapped_column(
         String(100), nullable=True
+    )
+    obj5_opt_id: Mapped[UUID | None] = mapped_column(
+        DBUUID(as_uuid=True), ForeignKey("test_object5.id"), nullable=True
     )
     thing_status: Mapped[ThingStatus | None] = mapped_column(
         DBEnum(ThingStatus, native_enum=True), nullable=True
@@ -42,12 +55,30 @@ class IEntTestThing(Ent):
 
     @property
     @abstractmethod
+    def obj5_id(self) -> UUID:
+        pass
+
+    @property
+    @abstractmethod
     def a_pattern_validated_field(self) -> str | None:
         pass
 
     @property
     @abstractmethod
+    def obj5_opt_id(self) -> UUID | None:
+        pass
+
+    @property
+    @abstractmethod
     def thing_status(self) -> ThingStatus | None:
+        pass
+
+    @abstractmethod
+    async def gen_obj5(self) -> "EntTestObject5":
+        pass
+
+    @abstractmethod
+    async def gen_obj5_opt(self) -> "EntTestObject5" | None:
         pass
 
     @classmethod
@@ -175,7 +206,9 @@ class IEntTestThingExample:
         vc: ExampleViewerContext,
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
+        obj5_id: UUID | Sentinel = NOTHING,
         a_pattern_validated_field: str | None = None,
+        obj5_opt_id: UUID | None = None,
         thing_status: ThingStatus | None = None,
     ) -> IEntTestThing:
         # TODO make sure we only use this in test mode
@@ -187,6 +220,8 @@ class IEntTestThingExample:
             vc=vc,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            obj5_id=obj5_id,
             a_pattern_validated_field=a_pattern_validated_field,
+            obj5_opt_id=obj5_opt_id,
             thing_status=thing_status,
         )

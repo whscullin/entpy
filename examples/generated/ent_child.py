@@ -16,18 +16,18 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
 from typing import TypeVar
-from .ent_query import EntQuery
-from ent_child_schema import EntChildSchema
-from .ent_model import EntModel
-from sentinels import NOTHING, Sentinel  # type: ignore
-from typing import TYPE_CHECKING
-from entpy import Field
 from sqlalchemy import select, func, Result
 from sqlalchemy import String
+from .ent_query import EntQuery
+from typing import TYPE_CHECKING
+from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from entpy import Field
+from ent_child_schema import EntChildSchema
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from .ent_model import EntModel
 
 if TYPE_CHECKING:
     from .ent_parent import EntParent

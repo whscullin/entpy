@@ -16,17 +16,21 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy.orm import Mapped, mapped_column
-from .ent_test_thing import IEntTestThing
+from .ent_test_thing import EntTestThingModel
 from typing import TypeVar
+from sqlalchemy import String
+from sqlalchemy import select, func, Result
 from .ent_query import EntQuery
-from ent_test_thing_pattern import ThingStatus
-from ent_test_object2_schema import EntTestObject2Schema
+from typing import TYPE_CHECKING
 from sentinels import NOTHING, Sentinel  # type: ignore
 from entpy import Field
-from sqlalchemy import select, func, Result
-from sqlalchemy import String
-from .ent_test_thing import EntTestThingModel
+from .ent_test_thing import IEntTestThing
+from ent_test_thing_pattern import ThingStatus
+from sqlalchemy.orm import Mapped, mapped_column
+from ent_test_object2_schema import EntTestObject2Schema
+
+if TYPE_CHECKING:
+    from .ent_test_object5 import EntTestObject5
 
 
 class EntTestObject2Model(EntTestThingModel):
@@ -60,8 +64,28 @@ class EntTestObject2(IEntTestThing, Ent[ExampleViewerContext]):
         return self.model.a_good_thing
 
     @property
+    def obj5_id(self) -> UUID:
+        return self.model.obj5_id
+
+    async def gen_obj5(self) -> EntTestObject5:
+        from .ent_test_object5 import EntTestObject5
+
+        return await EntTestObject5.genx(self.vc, self.model.obj5_id)
+
+    @property
     def a_pattern_validated_field(self) -> str | None:
         return self.model.a_pattern_validated_field
+
+    @property
+    def obj5_opt_id(self) -> UUID | None:
+        return self.model.obj5_opt_id
+
+    async def gen_obj5_opt(self) -> "EntTestObject5" | None:
+        from .ent_test_object5 import EntTestObject5
+
+        if self.model.obj5_opt_id:
+            return await EntTestObject5.gen(self.vc, self.model.obj5_opt_id)
+        return None
 
     @property
     def some_field(self) -> str | None:
@@ -189,7 +213,9 @@ class EntTestObject2Mutator:
         cls,
         vc: ExampleViewerContext,
         a_good_thing: str,
+        obj5_id: UUID,
         a_pattern_validated_field: str | None = None,
+        obj5_opt_id: UUID | None = None,
         some_field: str | None = None,
         thing_status: ThingStatus | None = None,
         id: UUID | None = None,
@@ -200,7 +226,9 @@ class EntTestObject2Mutator:
             id=id,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            obj5_id=obj5_id,
             a_pattern_validated_field=a_pattern_validated_field,
+            obj5_opt_id=obj5_opt_id,
             some_field=some_field,
             thing_status=thing_status,
         )
@@ -222,7 +250,9 @@ class EntTestObject2MutatorCreationAction:
     vc: ExampleViewerContext
     id: UUID
     a_good_thing: str
+    obj5_id: UUID
     a_pattern_validated_field: str | None = None
+    obj5_opt_id: UUID | None = None
     some_field: str | None = None
     thing_status: ThingStatus | None = None
 
@@ -232,7 +262,9 @@ class EntTestObject2MutatorCreationAction:
         id: UUID | None,
         created_at: datetime | None,
         a_good_thing: str,
+        obj5_id: UUID,
         a_pattern_validated_field: str | None,
+        obj5_opt_id: UUID | None,
         some_field: str | None,
         thing_status: ThingStatus | None,
     ) -> None:
@@ -240,7 +272,9 @@ class EntTestObject2MutatorCreationAction:
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
         self.id = id if id else generate_uuid(EntTestObject2, self.created_at)
         self.a_good_thing = a_good_thing
+        self.obj5_id = obj5_id
         self.a_pattern_validated_field = a_pattern_validated_field
+        self.obj5_opt_id = obj5_opt_id
         self.some_field = some_field
         self.thing_status = thing_status
 
@@ -260,7 +294,9 @@ class EntTestObject2MutatorCreationAction:
             id=self.id,
             created_at=self.created_at,
             a_good_thing=self.a_good_thing,
+            obj5_id=self.obj5_id,
             a_pattern_validated_field=self.a_pattern_validated_field,
+            obj5_opt_id=self.obj5_opt_id,
             some_field=self.some_field,
             thing_status=self.thing_status,
         )
@@ -275,7 +311,9 @@ class EntTestObject2MutatorUpdateAction:
     ent: EntTestObject2
     id: UUID
     a_good_thing: str
+    obj5_id: UUID
     a_pattern_validated_field: str | None = None
+    obj5_opt_id: UUID | None = None
     some_field: str | None = None
     thing_status: ThingStatus | None = None
 
@@ -283,7 +321,9 @@ class EntTestObject2MutatorUpdateAction:
         self.vc = vc
         self.ent = ent
         self.a_good_thing = ent.a_good_thing
+        self.obj5_id = ent.obj5_id
         self.a_pattern_validated_field = ent.a_pattern_validated_field
+        self.obj5_opt_id = ent.obj5_opt_id
         self.some_field = ent.some_field
         self.thing_status = ent.thing_status
 
@@ -301,7 +341,9 @@ class EntTestObject2MutatorUpdateAction:
 
         model = self.ent.model
         model.a_good_thing = self.a_good_thing
+        model.obj5_id = self.obj5_id
         model.a_pattern_validated_field = self.a_pattern_validated_field
+        model.obj5_opt_id = self.obj5_opt_id
         model.some_field = self.some_field
         model.thing_status = self.thing_status
         session.add(model)
@@ -334,7 +376,9 @@ class EntTestObject2Example:
         vc: ExampleViewerContext,
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
+        obj5_id: UUID | Sentinel = NOTHING,
         a_pattern_validated_field: str | None = None,
+        obj5_opt_id: UUID | None = None,
         some_field: str | None = None,
         thing_status: ThingStatus | None = None,
     ) -> EntTestObject2:
@@ -344,17 +388,30 @@ class EntTestObject2Example:
             "A sunny day" if isinstance(a_good_thing, Sentinel) else a_good_thing
         )
 
+        if isinstance(obj5_id, Sentinel) or obj5_id is None:
+            from .ent_test_object5 import EntTestObject5Example
+
+            obj5_id_ent = await EntTestObject5Example.gen_create(vc)
+            obj5_id = obj5_id_ent.id
         a_pattern_validated_field = (
             "vdurmont"
             if isinstance(a_pattern_validated_field, Sentinel)
             else a_pattern_validated_field
         )
 
+        if isinstance(obj5_opt_id, Sentinel) or obj5_opt_id is None:
+            from .ent_test_object5 import EntTestObject5Example
+
+            obj5_opt_id_ent = await EntTestObject5Example.gen_create(vc)
+            obj5_opt_id = obj5_opt_id_ent.id
+
         return await EntTestObject2Mutator.create(
             vc=vc,
             created_at=created_at,
             a_good_thing=a_good_thing,
+            obj5_id=obj5_id,
             a_pattern_validated_field=a_pattern_validated_field,
+            obj5_opt_id=obj5_opt_id,
             some_field=some_field,
             thing_status=thing_status,
         ).gen_savex()
