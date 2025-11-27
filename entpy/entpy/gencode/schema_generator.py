@@ -73,7 +73,7 @@ def generate(
     )
     if type_checking_imports:
         imports.append("from typing import TYPE_CHECKING")
-    imports = list(set(imports))  # Remove duplicates
+    imports = sorted(set(imports))  # Remove duplicates
     imports_code = "\n".join(imports)
     type_checking_imports_code = (
         "if TYPE_CHECKING:\n    " + "\n    ".join(type_checking_imports)
@@ -127,7 +127,7 @@ def _validate_unique_field_names(schema: Schema) -> None:
     duplicates = [name for name in field_names if field_names.count(name) > 1]
 
     if duplicates:
-        unique_duplicates = list(set(duplicates))
+        unique_duplicates = sorted(set(duplicates))
         raise ValueError(
             f"Duplicate field names found in {schema.__class__.__name__}: {', '.join(unique_duplicates)}"
         )
