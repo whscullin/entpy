@@ -8,20 +8,20 @@ from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
 from sentinels import Sentinel, NOTHING  # type: ignore
-from typing import TypeVar
-from sqlalchemy import select, func, Result
-from sqlalchemy import String
-from typing import cast
+from .ent_model import EntModel
 from .ent_query import EntQuery
 from database import get_session
-from sqlalchemy import Enum as DBEnum
-from entpy import EntNotFoundError, ExecutionError
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from ent_test_thing_pattern import ThingStatus
+from entpy import EntNotFoundError, ExecutionError
 from evc import ExampleViewerContext
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Enum as DBEnum
 from sqlalchemy import ForeignKey
-from .ent_model import EntModel
+from sqlalchemy import String
+from sqlalchemy import select, func, Result
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from typing import TypeVar
+from typing import cast
 
 from typing import TYPE_CHECKING
 
@@ -197,6 +197,18 @@ class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "IEntTestThingQuery":
+        from .ent_test_thing_view import EntTestThingView
+
+        self.query = self.query.order_by(EntTestThingView.__table__.c.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "IEntTestThingQuery":
+        from .ent_test_thing_view import EntTestThingView
+
+        self.query = self.query.order_by(EntTestThingView.__table__.c.id.desc())
+        return self
 
 
 class IEntTestThingExample:

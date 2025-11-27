@@ -16,17 +16,17 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from typing import TypeVar
-from sqlalchemy import select, func, Result
-from .ent_query import EntQuery
-from typing import TYPE_CHECKING
-from sentinels import Sentinel  # type: ignore
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from entpy import Field
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
-from ent_test_object3_schema import EntTestObject3Schema
 from .ent_model import EntModel
+from .ent_query import EntQuery
+from ent_test_object3_schema import EntTestObject3Schema
+from entpy import Field
+from sentinels import Sentinel  # type: ignore
+from sqlalchemy import ForeignKey
+from sqlalchemy import select, func, Result
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from typing import TypeVar
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ent_test_object4 import EntTestObject4
@@ -181,6 +181,14 @@ class EntTestObject3Query(EntQuery[EntTestObject3, EntTestObject3Model]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "EntTestObject3Query":
+        self.query = self.query.order_by(EntTestObject3Model.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "EntTestObject3Query":
+        self.query = self.query.order_by(EntTestObject3Model.id.desc())
+        return self
 
 
 class EntTestObject3Mutator:

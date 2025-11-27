@@ -25,6 +25,14 @@ class EntQuery(ABC, Generic[ENT, ENTMODEL]):
         self.query = self.query.order_by(predicate)
         return self
 
+    @abstractmethod
+    def order_by_id_asc(self) -> Self:
+        pass
+
+    @abstractmethod
+    def order_by_id_desc(self) -> Self:
+        pass
+
     def limit(self, limit: int) -> Self:
         self.query = self.query.limit(limit)
         return self

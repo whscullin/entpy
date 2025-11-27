@@ -16,18 +16,18 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from typing import TypeVar
-from sqlalchemy import select, func, Result
-from sqlalchemy import String
-from .ent_query import EntQuery
-from typing import TYPE_CHECKING
-from sentinels import NOTHING, Sentinel  # type: ignore
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from entpy import Field
-from ent_parent_schema import EntParentSchema
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
 from .ent_model import EntModel
+from .ent_query import EntQuery
+from ent_parent_schema import EntParentSchema
+from entpy import Field
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy import ForeignKey
+from sqlalchemy import String
+from sqlalchemy import select, func, Result
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from typing import TypeVar
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ent_grand_parent import EntGrandParent
@@ -181,6 +181,14 @@ class EntParentQuery(EntQuery[EntParent, EntParentModel]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "EntParentQuery":
+        self.query = self.query.order_by(EntParentModel.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "EntParentQuery":
+        self.query = self.query.order_by(EntParentModel.id.desc())
+        return self
 
 
 class EntParentMutator:

@@ -16,28 +16,29 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from sqlalchemy import DateTime
-from sqlalchemy import select, func, Result
-from sqlalchemy import Text
 from .ent_query import EntQuery
-from sqlalchemy.dialects.postgresql import JSONB
-from sentinels import NOTHING, Sentinel  # type: ignore
-from ent_test_thing_pattern import ThingStatus
-from ent_test_object_schema import EntTestObjectSchema
-from sqlalchemy import JSON
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
-from entpy import Field, FieldWithDynamicExample
-from .ent_test_thing import IEntTestThing
-from sqlalchemy import Boolean
-from sqlalchemy import ForeignKey
-from typing import TypeVar
-from ent_test_object_schema import Status
-from sqlalchemy import Integer
 from .ent_test_thing import EntTestThingModel
-from sqlalchemy import String
-from typing import TYPE_CHECKING
+from .ent_test_thing import IEntTestThing
+from ent_test_object_schema import EntTestObjectSchema
+from ent_test_object_schema import Status
+from ent_test_thing_pattern import ThingStatus
+from entpy import Field, FieldWithDynamicExample
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy import Boolean
+from sqlalchemy import DateTime
 from sqlalchemy import Enum as DBEnum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import JSON
+from sqlalchemy import String
+from sqlalchemy import Text
+from sqlalchemy import select
+from sqlalchemy import func, Result
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy.orm import Mapped, mapped_column
+from typing import TypeVar
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ent_test_object5 import EntTestObject5
@@ -378,6 +379,14 @@ class EntTestObjectQuery(EntQuery[EntTestObject, EntTestObjectModel]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "EntTestObjectQuery":
+        self.query = self.query.order_by(EntTestObjectModel.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "EntTestObjectQuery":
+        self.query = self.query.order_by(EntTestObjectModel.id.desc())
+        return self
 
 
 class EntTestObjectMutator:

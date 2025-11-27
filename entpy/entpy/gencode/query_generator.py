@@ -34,6 +34,9 @@ def generate(
     gen_single_ent = _generate_gen_single_ent(
         is_pattern=is_pattern, base_name=base_name
     )
+    order_by_methods = _generate_order_by_methods(
+        is_pattern=is_pattern, base_name=base_name
+    )
     generic = "UUID" if is_pattern else f"{base_name}Model"
 
     return GeneratedContent(
@@ -71,7 +74,7 @@ class {i}{base_name}Query(EntQuery[{i}{base_name}, {generic}]):
         if not ent:
             raise EntNotFoundError(f"Expected query to return an ent, got None.")
         return ent
-    
+
     async def gen_count_NO_PRIVACY(self) -> int:
         session = {session_getter_fn_name}()
         count_query = self.query.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
@@ -80,6 +83,8 @@ class {i}{base_name}Query(EntQuery[{i}{base_name}, {generic}]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+{order_by_methods}
 """,
     )
 
@@ -128,3 +133,31 @@ def _generate_gen_single_ent(is_pattern: bool, base_name: str) -> str:
         return await cast(type[{i}{base_name}], ent_type).gen(self.vc, ent_id)
 """
     return ""
+
+
+def _generate_order_by_methods(is_pattern: bool, base_name: str) -> str:
+    i = "I" if is_pattern else ""
+    if is_pattern:
+        # For patterns, we order by the id column in the view's table
+        return f"""
+    def order_by_id_asc(self) -> "{i}{base_name}Query":
+        from .{to_snake_case(base_name)}_view import {base_name}View
+        self.query = self.query.order_by({base_name}View.__table__.c.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "{i}{base_name}Query":
+        from .{to_snake_case(base_name)}_view import {base_name}View
+        self.query = self.query.order_by({base_name}View.__table__.c.id.desc())
+        return self
+"""
+    else:
+        # For regular models, we order by the model's id column
+        return f"""
+    def order_by_id_asc(self) -> "{i}{base_name}Query":
+        self.query = self.query.order_by({base_name}Model.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "{i}{base_name}Query":
+        self.query = self.query.order_by({base_name}Model.id.desc())
+        return self
+"""

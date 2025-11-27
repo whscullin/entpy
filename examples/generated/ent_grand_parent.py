@@ -16,15 +16,15 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
-from typing import TypeVar
-from sqlalchemy import select, func, Result
-from sqlalchemy import String
-from .ent_query import EntQuery
-from sentinels import NOTHING, Sentinel  # type: ignore
-from entpy import Field
-from sqlalchemy.orm import Mapped, mapped_column
-from ent_grand_parent_schema import EntGrandParentSchema
 from .ent_model import EntModel
+from .ent_query import EntQuery
+from ent_grand_parent_schema import EntGrandParentSchema
+from entpy import Field
+from sentinels import NOTHING, Sentinel  # type: ignore
+from sqlalchemy import String
+from sqlalchemy import select, func, Result
+from sqlalchemy.orm import Mapped, mapped_column
+from typing import TypeVar
 
 
 class EntGrandParentModel(EntModel):
@@ -167,6 +167,14 @@ class EntGrandParentQuery(EntQuery[EntGrandParent, EntGrandParentModel]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "EntGrandParentQuery":
+        self.query = self.query.order_by(EntGrandParentModel.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "EntGrandParentQuery":
+        self.query = self.query.order_by(EntGrandParentModel.id.desc())
+        return self
 
 
 class EntGrandParentMutator:

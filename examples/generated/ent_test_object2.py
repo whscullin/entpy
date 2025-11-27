@@ -16,18 +16,18 @@ from uuid import UUID
 from datetime import datetime, UTC
 from evc import ExampleViewerContext
 from database import get_session
+from .ent_query import EntQuery
 from .ent_test_thing import EntTestThingModel
-from typing import TypeVar
+from .ent_test_thing import IEntTestThing
+from ent_test_object2_schema import EntTestObject2Schema
+from ent_test_thing_pattern import ThingStatus
+from entpy import Field
+from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy import String
 from sqlalchemy import select, func, Result
-from .ent_query import EntQuery
-from typing import TYPE_CHECKING
-from sentinels import NOTHING, Sentinel  # type: ignore
-from entpy import Field
-from .ent_test_thing import IEntTestThing
-from ent_test_thing_pattern import ThingStatus
 from sqlalchemy.orm import Mapped, mapped_column
-from ent_test_object2_schema import EntTestObject2Schema
+from typing import TypeVar
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ent_test_object5 import EntTestObject5
@@ -205,6 +205,14 @@ class EntTestObject2Query(EntQuery[EntTestObject2, EntTestObject2Model]):
         if count is None:
             raise ExecutionError("Unable to get the count")
         return count
+
+    def order_by_id_asc(self) -> "EntTestObject2Query":
+        self.query = self.query.order_by(EntTestObject2Model.id.asc())
+        return self
+
+    def order_by_id_desc(self) -> "EntTestObject2Query":
+        self.query = self.query.order_by(EntTestObject2Model.id.desc())
+        return self
 
 
 class EntTestObject2Mutator:
