@@ -142,12 +142,12 @@ def _generate_order_by_methods(is_pattern: bool, base_name: str) -> str:
         return f"""
     def order_by_id_asc(self) -> "{i}{base_name}Query":
         from .{to_snake_case(base_name)}_view import {base_name}View
-        self.query = self.query.order_by({base_name}View.__table__.c.id.asc())
+        self.query = self.query.order_by({base_name}View.id.asc())
         return self
 
     def order_by_id_desc(self) -> "{i}{base_name}Query":
         from .{to_snake_case(base_name)}_view import {base_name}View
-        self.query = self.query.order_by({base_name}View.__table__.c.id.desc())
+        self.query = self.query.order_by({base_name}View.id.desc())
         return self
 """
     else:

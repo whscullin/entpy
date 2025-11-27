@@ -201,13 +201,13 @@ class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
     def order_by_id_asc(self) -> "IEntTestThingQuery":
         from .ent_test_thing_view import EntTestThingView
 
-        self.query = self.query.order_by(EntTestThingView.__table__.c.id.asc())
+        self.query = self.query.order_by(EntTestThingView.id.asc())
         return self
 
     def order_by_id_desc(self) -> "IEntTestThingQuery":
         from .ent_test_thing_view import EntTestThingView
 
-        self.query = self.query.order_by(EntTestThingView.__table__.c.id.desc())
+        self.query = self.query.order_by(EntTestThingView.id.desc())
         return self
 
 
