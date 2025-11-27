@@ -65,7 +65,7 @@ def generate(
         + query_content.imports
         + gen_edges.imports
     )
-    imports = list(set(imports))  # Remove duplicates
+    imports = sorted(set(imports))  # Remove duplicates
     imports_code = "\n".join(imports)
 
     type_checking_imports = gen_edges.type_checking_imports

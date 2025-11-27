@@ -46,7 +46,7 @@ def generate(
     columns = _generate_columns(pattern=pattern)
     imports += columns.imports
 
-    imports_code = "\n".join(set(imports))
+    imports_code = "\n".join(sorted(set(imports)))
 
     # Generate column accessors for the view
     column_accessors = ""
