@@ -5,8 +5,8 @@
 from datetime import datetime
 from uuid import UUID as PYUUID
 
-from sqlalchemy import DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from entpy.types import DateTime
+from sqlalchemy import Uuid
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -19,20 +19,16 @@ class EntModel(Base):
 
     @declared_attr
     def id(self) -> Mapped[PYUUID]:
-        return mapped_column(
-            UUID(as_uuid=True), primary_key=True, index=True, nullable=False
-        )
+        return mapped_column(Uuid(), primary_key=True, index=True, nullable=False)
 
     @declared_attr
     def created_at(self) -> Mapped[datetime]:
-        return mapped_column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        )
+        return mapped_column(DateTime(), server_default=func.now(), nullable=False)
 
     @declared_attr
     def updated_at(self) -> Mapped[datetime]:
         return mapped_column(
-            DateTime(timezone=True),
+            DateTime(),
             onupdate=func.now(),
             server_default=func.now(),
             nullable=False,

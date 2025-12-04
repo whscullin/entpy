@@ -1,6 +1,7 @@
 from entpy import Schema
 from entpy.framework.fields.core import Field
 from entpy.gencode.generated_content import GeneratedContent
+from entpy.gencode.utils import to_snake_case as _to_snake_case
 
 
 def generate(
@@ -171,10 +172,28 @@ def _generate_update(
         [f"        model.{field.name}=self.{field.name}" for field in mutable_fields]
     )
 
+    # Check if the schema has patterns to determine inheritance
+    patterns = schema.get_patterns()
+    if patterns:
+        # Use all patterns for multiple inheritance
+        pattern_base_classes = []
+        pattern_imports = []
+        for pattern in patterns:
+            pattern_base_name = pattern.__class__.__name__.replace("Pattern", "")
+            pattern_base_classes.append(f"I{pattern_base_name}MutatorUpdateAction")
+            pattern_imports.append(
+                f"from .{_to_snake_case(pattern_base_name)} import I{pattern_base_name}MutatorUpdateAction"
+            )
+        inheritance = f"({', '.join(pattern_base_classes)})"
+        imports = validations.imports + pattern_imports
+    else:
+        inheritance = ""
+        imports = validations.imports
+
     return GeneratedContent(
-        imports=validations.imports,
+        imports=imports,
         code=f"""
-class {base_name}MutatorUpdateAction:
+class {base_name}MutatorUpdateAction{inheritance}:
     vc: {vc_name}
     ent: {base_name}
     id: UUID
@@ -202,9 +221,28 @@ class {base_name}MutatorUpdateAction:
 def _generate_deletion(
     schema: Schema, base_name: str, session_getter_fn_name: str, vc_name: str
 ) -> GeneratedContent:
+    # Check if the schema has patterns to determine inheritance
+    patterns = schema.get_patterns()
+    if patterns:
+        # Use all patterns for multiple inheritance
+        pattern_base_classes = []
+        pattern_imports = []
+        for pattern in patterns:
+            pattern_base_name = pattern.__class__.__name__.replace("Pattern", "")
+            pattern_base_classes.append(f"I{pattern_base_name}MutatorDeletionAction")
+            pattern_imports.append(
+                f"from .{_to_snake_case(pattern_base_name)} import I{pattern_base_name}MutatorDeletionAction"
+            )
+        inheritance = f"({', '.join(pattern_base_classes)})"
+        imports = pattern_imports
+    else:
+        inheritance = ""
+        imports = []
+
     return GeneratedContent(
+        imports=imports,
         code=f"""
-class {base_name}MutatorDeletionAction:
+class {base_name}MutatorDeletionAction{inheritance}:
     vc: {vc_name}
     ent: {base_name}
 

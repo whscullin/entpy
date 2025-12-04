@@ -23,8 +23,8 @@ from entpy import Field
 from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import Uuid
 from sqlalchemy import select, func, Result
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
 from typing import TYPE_CHECKING
@@ -38,7 +38,7 @@ class EntChildModel(EntModel):
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     parent_id: Mapped[UUID] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("parent.id"), nullable=False
+        Uuid(), ForeignKey("parent.id"), nullable=False
     )
 
 

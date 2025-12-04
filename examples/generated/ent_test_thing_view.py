@@ -13,9 +13,10 @@ from .ent_test_thing import EntTestThingModel
 from .ent_test_object import EntTestObjectModel
 from .ent_test_object2 import EntTestObject2Model
 from ent_test_thing_pattern import ThingStatus
-from sqlalchemy import DateTime, String
+from entpy.types import DateTime
 from sqlalchemy import Enum as DBEnum
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
+from sqlalchemy import String
+from sqlalchemy import Uuid
 
 
 view_query: Selectable = union_all(
@@ -69,14 +70,14 @@ _view_metadata = MetaData()
 _view_table = Table(
     "ent_test_thing_view",
     _view_metadata,
-    Column("id", DBUUID(as_uuid=True), primary_key=True),
-    Column("created_at", DateTime(timezone=True)),
-    Column("updated_at", DateTime(timezone=True)),
+    Column("id", Uuid(), primary_key=True),
+    Column("created_at", DateTime()),
+    Column("updated_at", DateTime()),
     Column("ent_type", String(50)),
     Column("a_good_thing", String(100), nullable=False),
-    Column("obj5_id", DBUUID(as_uuid=True), nullable=False),
+    Column("obj5_id", Uuid(), nullable=False),
     Column("a_pattern_validated_field", String(100), nullable=True),
-    Column("obj5_opt_id", DBUUID(as_uuid=True), nullable=True),
+    Column("obj5_opt_id", Uuid(), nullable=True),
     Column("thing_status", DBEnum(ThingStatus, native_enum=True), nullable=True),
     info={"is_view": True},
 )

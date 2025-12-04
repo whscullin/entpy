@@ -3,7 +3,7 @@
 ####################
 
 from __future__ import annotations
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
@@ -17,8 +17,8 @@ from evc import ExampleViewerContext
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import Uuid
 from sqlalchemy import select, func, Result
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
 from typing import cast
@@ -34,13 +34,13 @@ class EntTestThingModel(EntModel):
 
     a_good_thing: Mapped[str] = mapped_column(String(100), nullable=False)
     obj5_id: Mapped[UUID] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_object5.id"), nullable=False
+        Uuid(), ForeignKey("test_object5.id"), nullable=False
     )
     a_pattern_validated_field: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )
     obj5_opt_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_object5.id"), nullable=True
+        Uuid(), ForeignKey("test_object5.id"), nullable=True
     )
     thing_status: Mapped[ThingStatus | None] = mapped_column(
         DBEnum(ThingStatus, native_enum=True), nullable=True
@@ -209,6 +209,71 @@ class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
 
         self.query = self.query.order_by(EntTestThingView.id.desc())
         return self
+
+
+class IEntTestThingMutator:
+    @classmethod
+    def update(
+        cls, vc: ExampleViewerContext, ent: IEntTestThing
+    ) -> IEntTestThingMutatorUpdateAction:
+        from .ent_test_object2 import EntTestObject2
+
+        if isinstance(ent, EntTestObject2):
+            from .ent_test_object2 import EntTestObject2Mutator
+
+            return EntTestObject2Mutator.update(vc, ent)
+
+        from .ent_test_object import EntTestObject
+
+        if isinstance(ent, EntTestObject):
+            from .ent_test_object import EntTestObjectMutator
+
+            return EntTestObjectMutator.update(vc, ent)
+
+        raise ValueError(f"Unknown implementation for IEntTestThing: {type(ent)}")
+
+    @classmethod
+    def delete(
+        cls, vc: ExampleViewerContext, ent: IEntTestThing
+    ) -> IEntTestThingMutatorDeletionAction:
+        from .ent_test_object2 import EntTestObject2
+
+        if isinstance(ent, EntTestObject2):
+            from .ent_test_object2 import EntTestObject2Mutator
+
+            return EntTestObject2Mutator.delete(vc, ent)
+
+        from .ent_test_object import EntTestObject
+
+        if isinstance(ent, EntTestObject):
+            from .ent_test_object import EntTestObjectMutator
+
+            return EntTestObjectMutator.delete(vc, ent)
+
+        raise ValueError(f"Unknown implementation for IEntTestThing: {type(ent)}")
+
+
+class IEntTestThingMutatorUpdateAction(ABC):
+    vc: ExampleViewerContext
+    ent: IEntTestThing
+    a_good_thing: str
+    obj5_id: UUID
+    a_pattern_validated_field: str | None
+    obj5_opt_id: UUID | None
+    thing_status: ThingStatus | None
+
+    @abstractmethod
+    async def gen_savex(self) -> IEntTestThing:
+        pass
+
+
+class IEntTestThingMutatorDeletionAction(ABC):
+    vc: ExampleViewerContext
+    ent: IEntTestThing
+
+    @abstractmethod
+    async def gen_save(self) -> None:
+        pass
 
 
 class IEntTestThingExample:

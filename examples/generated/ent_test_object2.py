@@ -19,6 +19,8 @@ from database import get_session
 from .ent_query import EntQuery
 from .ent_test_thing import EntTestThingModel
 from .ent_test_thing import IEntTestThing
+from .ent_test_thing import IEntTestThingMutatorDeletionAction
+from .ent_test_thing import IEntTestThingMutatorUpdateAction
 from ent_test_object2_schema import EntTestObject2Schema
 from ent_test_thing_pattern import ThingStatus
 from entpy import Field
@@ -314,7 +316,7 @@ class EntTestObject2MutatorCreationAction:
         return await EntTestObject2._genx_from_model(self.vc, model)
 
 
-class EntTestObject2MutatorUpdateAction:
+class EntTestObject2MutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     vc: ExampleViewerContext
     ent: EntTestObject2
     id: UUID
@@ -361,7 +363,7 @@ class EntTestObject2MutatorUpdateAction:
         return await EntTestObject2._genx_from_model(self.vc, model)
 
 
-class EntTestObject2MutatorDeletionAction:
+class EntTestObject2MutatorDeletionAction(IEntTestThingMutatorDeletionAction):
     vc: ExampleViewerContext
     ent: EntTestObject2
 

@@ -22,8 +22,8 @@ from ent_test_object3_schema import EntTestObject3Schema
 from entpy import Field
 from sentinels import Sentinel  # type: ignore
 from sqlalchemy import ForeignKey
+from sqlalchemy import Uuid
 from sqlalchemy import select, func, Result
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
 from typing import TYPE_CHECKING
@@ -36,7 +36,7 @@ class EntTestObject3Model(EntModel):
     __tablename__ = "test_object3"
 
     other_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_object4.id"), nullable=True
+        Uuid(), ForeignKey("test_object4.id"), nullable=True
     )
 
 

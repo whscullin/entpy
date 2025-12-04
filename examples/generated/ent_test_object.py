@@ -19,23 +19,25 @@ from database import get_session
 from .ent_query import EntQuery
 from .ent_test_thing import EntTestThingModel
 from .ent_test_thing import IEntTestThing
+from .ent_test_thing import IEntTestThingMutatorDeletionAction
+from .ent_test_thing import IEntTestThingMutatorUpdateAction
 from ent_test_object_schema import EntTestObjectSchema
 from ent_test_object_schema import Status
 from ent_test_thing_pattern import ThingStatus
 from entpy import Field, FieldWithDynamicExample
+from entpy.types import DateTime
 from sentinels import NOTHING, Sentinel  # type: ignore
 from sqlalchemy import Boolean
-from sqlalchemy import DateTime
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import Uuid
 from sqlalchemy import select
 from sqlalchemy import func, Result
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as DBUUID
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
 from typing import TYPE_CHECKING
@@ -51,7 +53,7 @@ class EntTestObjectModel(EntTestThingModel):
 
     firstname: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     required_sub_object_id: Mapped[UUID] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_sub_object.id"), nullable=False
+        Uuid(), ForeignKey("test_sub_object.id"), nullable=False
     )
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -61,31 +63,27 @@ class EntTestObjectModel(EntTestThingModel):
         String(100), nullable=True, server_default="Doe"
     )
     optional_sub_object_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_sub_object.id"), nullable=True
+        Uuid(), ForeignKey("test_sub_object.id"), nullable=True
     )
     optional_sub_object_no_ex_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_sub_object.id"), nullable=True
+        Uuid(), ForeignKey("test_sub_object.id"), nullable=True
     )
     sadness: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True, server_default=Status.SAD.value
     )
     self_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), ForeignKey("test_object.id"), nullable=True
+        Uuid(), ForeignKey("test_object.id"), nullable=True
     )
     some_json: Mapped[list[str] | None] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), nullable=True
     )
-    some_pattern_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(as_uuid=True), nullable=True
-    )
+    some_pattern_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
     status: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True
     )
     status_code: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     validated_field: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    when_is_it_cool: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    when_is_it_cool: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)
 
 
 class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
@@ -589,7 +587,7 @@ class EntTestObjectMutatorCreationAction:
         return await EntTestObject._genx_from_model(self.vc, model)
 
 
-class EntTestObjectMutatorUpdateAction:
+class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     vc: ExampleViewerContext
     ent: EntTestObject
     id: UUID
@@ -686,7 +684,7 @@ class EntTestObjectMutatorUpdateAction:
         return await EntTestObject._genx_from_model(self.vc, model)
 
 
-class EntTestObjectMutatorDeletionAction:
+class EntTestObjectMutatorDeletionAction(IEntTestThingMutatorDeletionAction):
     vc: ExampleViewerContext
     ent: EntTestObject
 

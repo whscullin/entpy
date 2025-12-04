@@ -42,6 +42,13 @@ def generate(
         vc_name=vc_name,
     )
 
+    mutator_content = _generate_mutator(
+        pattern=pattern,
+        base_name=base_name,
+        children_schema_classes=children_schema_classes,
+        vc_name=vc_name,
+    )
+
     # Get the first implementation we can find to use for the example
     if not children_schema_classes:
         raise ValueError(f"No concrete implementation found for {base_name}")
@@ -64,6 +71,7 @@ def generate(
         + model.imports
         + query_content.imports
         + gen_edges.imports
+        + mutator_content.imports
     )
     imports = sorted(set(imports))  # Remove duplicates
     imports_code = "\n".join(imports)
@@ -127,6 +135,8 @@ class I{base_name}(Ent):{get_description(pattern)}
 
 {query_content.code}
 
+{mutator_content.code}
+
 class I{base_name}Example:
     @classmethod
     async def gen_create(
@@ -181,3 +191,114 @@ def _generate_edges(pattern: Pattern, base_name: str, vc_name: str) -> Generated
         code=code,
         type_checking_imports=type_checking_imports,
     )
+
+
+def _generate_mutator(
+    pattern: Pattern,
+    base_name: str,
+    children_schema_classes: list[type[Schema]],
+    vc_name: str,
+) -> GeneratedContent:
+    # Generate the mutator class with update and delete methods
+    mutator_methods = _generate_mutator_methods(
+        base_name=base_name,
+        children_schema_classes=children_schema_classes,
+        vc_name=vc_name,
+    )
+
+    # Generate the abstract action classes
+    update_action = _generate_update_action(base_name=base_name, vc_name=vc_name, pattern=pattern)
+    delete_action = _generate_delete_action(base_name=base_name, vc_name=vc_name)
+
+    code = f"""
+class I{base_name}Mutator:
+{mutator_methods}
+
+{update_action}
+
+{delete_action}
+"""
+
+    return GeneratedContent(code=code)
+
+
+def _generate_mutator_methods(
+    base_name: str, children_schema_classes: list[type[Schema]], vc_name: str
+) -> str:
+    # Generate update method
+    update_checks = ""
+    for schema_class in children_schema_classes:
+        schema_base_name = schema_class.__name__.replace("Schema", "")
+        lower_schema = to_snake_case(schema_base_name)
+        update_checks += f"""
+        from .{lower_schema} import {schema_base_name}
+        if isinstance(ent, {schema_base_name}):
+            from .{lower_schema} import {schema_base_name}Mutator
+            return {schema_base_name}Mutator.update(vc, ent)
+"""
+
+    # Generate delete method
+    delete_checks = ""
+    for schema_class in children_schema_classes:
+        schema_base_name = schema_class.__name__.replace("Schema", "")
+        lower_schema = to_snake_case(schema_base_name)
+        delete_checks += f"""
+        from .{lower_schema} import {schema_base_name}
+        if isinstance(ent, {schema_base_name}):
+            from .{lower_schema} import {schema_base_name}Mutator
+            return {schema_base_name}Mutator.delete(vc, ent)
+"""
+
+    return f"""
+    @classmethod
+    def update(
+        cls, vc: {vc_name}, ent: I{base_name}
+    ) -> I{base_name}MutatorUpdateAction:
+{update_checks}
+        raise ValueError(f"Unknown implementation for I{base_name}: {{type(ent)}}")
+
+    @classmethod
+    def delete(
+        cls, vc: {vc_name}, ent: I{base_name}
+    ) -> I{base_name}MutatorDeletionAction:
+{delete_checks}
+        raise ValueError(f"Unknown implementation for I{base_name}: {{type(ent)}}")
+"""
+
+
+def _generate_update_action(base_name: str, vc_name: str, pattern: Pattern) -> str:
+    # Get mutable fields from the pattern
+    fields = pattern.get_all_fields()
+    mutable_fields = list(filter(lambda f: not f.is_immutable, fields))
+
+    # Build up the list of field attributes
+    field_attributes = "\n".join(
+        [
+            f"    {field.name}: {field.get_python_type()}"
+            + (" | None" if field.nullable else "")
+            for field in mutable_fields
+        ]
+    )
+
+    return f"""
+class I{base_name}MutatorUpdateAction(ABC):
+    vc: {vc_name}
+    ent: I{base_name}
+{field_attributes}
+
+    @abstractmethod
+    async def gen_savex(self) -> I{base_name}:
+        pass
+"""
+
+
+def _generate_delete_action(base_name: str, vc_name: str) -> str:
+    return f"""
+class I{base_name}MutatorDeletionAction(ABC):
+    vc: {vc_name}
+    ent: I{base_name}
+
+    @abstractmethod
+    async def gen_save(self) -> None:
+        pass
+"""
