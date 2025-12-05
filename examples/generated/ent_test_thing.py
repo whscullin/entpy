@@ -17,7 +17,7 @@ from evc import ExampleViewerContext
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
-from sqlalchemy import Uuid
+from sqlalchemy import UUID as DBUUID
 from sqlalchemy import select, func, Result
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TypeVar
@@ -34,13 +34,13 @@ class EntTestThingModel(EntModel):
 
     a_good_thing: Mapped[str] = mapped_column(String(100), nullable=False)
     obj5_id: Mapped[UUID] = mapped_column(
-        Uuid(), ForeignKey("test_object5.id"), nullable=False
+        DBUUID(), ForeignKey("test_object5.id"), nullable=False
     )
     a_pattern_validated_field: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )
     obj5_opt_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("test_object5.id"), nullable=True
+        DBUUID(), ForeignKey("test_object5.id"), nullable=True
     )
     thing_status: Mapped[ThingStatus | None] = mapped_column(
         DBEnum(ThingStatus, native_enum=True), nullable=True
@@ -291,9 +291,9 @@ class IEntTestThingExample:
         # TODO make sure we only use this in test mode
 
         # EntPy selected a random implementation of the pattern to use for examples
-        from .ent_test_object2 import EntTestObject2Example
+        from .ent_test_object import EntTestObjectExample
 
-        return await EntTestObject2Example.gen_create(
+        return await EntTestObjectExample.gen_create(
             vc=vc,
             created_at=created_at,
             a_good_thing=a_good_thing,

@@ -34,7 +34,7 @@ from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String
 from sqlalchemy import Text
-from sqlalchemy import Uuid
+from sqlalchemy import UUID as DBUUID
 from sqlalchemy import select
 from sqlalchemy import func, Result
 from sqlalchemy.dialects.postgresql import JSONB
@@ -53,7 +53,7 @@ class EntTestObjectModel(EntTestThingModel):
 
     firstname: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     required_sub_object_id: Mapped[UUID] = mapped_column(
-        Uuid(), ForeignKey("test_sub_object.id"), nullable=False
+        DBUUID(), ForeignKey("test_sub_object.id"), nullable=False
     )
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -63,21 +63,21 @@ class EntTestObjectModel(EntTestThingModel):
         String(100), nullable=True, server_default="Doe"
     )
     optional_sub_object_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("test_sub_object.id"), nullable=True
+        DBUUID(), ForeignKey("test_sub_object.id"), nullable=True
     )
     optional_sub_object_no_ex_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("test_sub_object.id"), nullable=True
+        DBUUID(), ForeignKey("test_sub_object.id"), nullable=True
     )
     sadness: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True, server_default=Status.SAD.value
     )
     self_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("test_object.id"), nullable=True
+        DBUUID(), ForeignKey("test_object.id"), nullable=True
     )
     some_json: Mapped[list[str] | None] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), nullable=True
     )
-    some_pattern_id: Mapped[UUID | None] = mapped_column(Uuid(), nullable=True)
+    some_pattern_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
     status: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True
     )

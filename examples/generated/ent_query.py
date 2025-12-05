@@ -14,7 +14,7 @@ class EntQuery(ABC, Generic[ENT, ENTMODEL]):
     query: Select[tuple[ENTMODEL]]
 
     def join(
-        self, model_class: type[EntModel | Table], predicate: ColumnElement[bool]
+        self, model_class: type[EntModel] | Table, predicate: ColumnElement[bool]
     ) -> Self:
         self.query = self.query.join(model_class, predicate)
         return self

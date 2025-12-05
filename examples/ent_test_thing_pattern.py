@@ -19,6 +19,9 @@ class MyValidator(FieldValidator[str | None]):
 
 
 class EntTestThingPattern(Pattern):
+    def get_example_subclass_name(self) -> str | None:
+        return "EntTestObject"
+
     def get_fields(self) -> list[Field]:
         return [
             EdgeField("obj5", EntTestObject5Schema).not_null(),

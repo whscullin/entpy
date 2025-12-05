@@ -49,11 +49,15 @@ def generate(
         vc_name=vc_name,
     )
 
-    # Get the first implementation we can find to use for the example
+    # Get the implementation to use for the example
     if not children_schema_classes:
         raise ValueError(f"No concrete implementation found for {base_name}")
-    schema_class = children_schema_classes[0]
-    example_base_name = schema_class.__name__.replace("Schema", "")
+    schema_class_name = pattern.get_example_subclass_name()
+    if schema_class_name:
+        example_base_name = schema_class_name
+    else:
+        schema_class = children_schema_classes[0]
+        example_base_name = schema_class.__name__.replace("Schema", "")
 
     # Generate the arguments for the gen_create function of the example
     example_arguments_definition = ""
@@ -144,7 +148,6 @@ class I{base_name}Example:
     ) -> I{base_name}:
         # TODO make sure we only use this in test mode
 
-        # EntPy selected a random implementation of the pattern to use for examples
         from .{to_snake_case(example_base_name)} import {example_base_name}Example
 
         return await {example_base_name}Example.gen_create(vc=vc, created_at=created_at{example_arguments_assignment})
@@ -207,7 +210,9 @@ def _generate_mutator(
     )
 
     # Generate the abstract action classes
-    update_action = _generate_update_action(base_name=base_name, vc_name=vc_name, pattern=pattern)
+    update_action = _generate_update_action(
+        base_name=base_name, vc_name=vc_name, pattern=pattern
+    )
     delete_action = _generate_delete_action(base_name=base_name, vc_name=vc_name)
 
     code = f"""
