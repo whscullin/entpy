@@ -7,8 +7,9 @@ def create_view(
     name: str,
     selectable: Selectable,
     metadata: MetaData,
+    schema: str | None = None,
 ) -> Table:
-    metadata.info.setdefault("views", {})[name] = selectable
+    metadata.info.setdefault("views", {})[(schema, name)] = selectable
     return create_view_orig(  # type: ignore[no-any-return]
         name,
         selectable,
