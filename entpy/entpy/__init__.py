@@ -17,6 +17,7 @@ from .framework.fields.int_field import IntField  # noqa: F401
 from .framework.fields.json_field import JsonField  # noqa: F401
 from .framework.fields.string_field import StringField  # noqa: F401
 from .framework.fields.text_field import TextField  # noqa: F401
+from .framework.fields.uuid_field import UuidField  # noqa: F401
 from .framework.fields.validator import FieldValidator  # noqa: F401
 from .framework.id_factory import generate_uuid  # noqa: F401
 from .framework.pattern import Pattern  # noqa: F401

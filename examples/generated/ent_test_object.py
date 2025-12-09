@@ -58,6 +58,7 @@ class EntTestObjectModel(EntTestThingModel):
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     context: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    correlation_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
     is_it_true: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     lastname: Mapped[str | None] = mapped_column(
         String(100), nullable=True, server_default="Doe"
@@ -82,6 +83,7 @@ class EntTestObjectModel(EntTestThingModel):
         DBEnum(Status, native_enum=True), nullable=True
     )
     status_code: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    trace_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
     validated_field: Mapped[str | None] = mapped_column(String(100), nullable=True)
     when_is_it_cool: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)
 
@@ -154,6 +156,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def context(self) -> str | None:
         return self.model.context
+
+    @property
+    def correlation_id(self) -> UUID | None:
+        return self.model.correlation_id
 
     @property
     def is_it_true(self) -> bool | None:
@@ -240,6 +246,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def thing_status(self) -> ThingStatus | None:
         return self.model.thing_status
+
+    @property
+    def trace_id(self) -> UUID | None:
+        return self.model.trace_id
 
     @property
     def validated_field(self) -> str | None:
@@ -400,6 +410,7 @@ class EntTestObjectMutator:
         a_pattern_validated_field: str | None = None,
         city: str | None = None,
         context: str | None = None,
+        correlation_id: UUID | None = None,
         is_it_true: bool | None = None,
         lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
@@ -412,6 +423,7 @@ class EntTestObjectMutator:
         status: Status | None = None,
         status_code: int | None = None,
         thing_status: ThingStatus | None = None,
+        trace_id: UUID | None = None,
         validated_field: str | None = None,
         when_is_it_cool: datetime | None = None,
         id: UUID | None = None,
@@ -429,6 +441,7 @@ class EntTestObjectMutator:
             a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
+            correlation_id=correlation_id,
             is_it_true=is_it_true,
             lastname=lastname,
             obj5_opt_id=obj5_opt_id,
@@ -441,6 +454,7 @@ class EntTestObjectMutator:
             status=status,
             status_code=status_code,
             thing_status=thing_status,
+            trace_id=trace_id,
             validated_field=validated_field,
             when_is_it_cool=when_is_it_cool,
         )
@@ -469,6 +483,7 @@ class EntTestObjectMutatorCreationAction:
     a_pattern_validated_field: str | None = None
     city: str | None = None
     context: str | None = None
+    correlation_id: UUID | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
     obj5_opt_id: UUID | None = None
@@ -481,6 +496,7 @@ class EntTestObjectMutatorCreationAction:
     status: Status | None = None
     status_code: int | None = None
     thing_status: ThingStatus | None = None
+    trace_id: UUID | None = None
     validated_field: str | None = None
     when_is_it_cool: datetime | None = None
 
@@ -497,6 +513,7 @@ class EntTestObjectMutatorCreationAction:
         a_pattern_validated_field: str | None,
         city: str | None,
         context: str | None,
+        correlation_id: UUID | None,
         is_it_true: bool | None,
         lastname: str | None,
         obj5_opt_id: UUID | None,
@@ -509,6 +526,7 @@ class EntTestObjectMutatorCreationAction:
         status: Status | None,
         status_code: int | None,
         thing_status: ThingStatus | None,
+        trace_id: UUID | None,
         validated_field: str | None,
         when_is_it_cool: datetime | None,
     ) -> None:
@@ -523,6 +541,7 @@ class EntTestObjectMutatorCreationAction:
         self.a_pattern_validated_field = a_pattern_validated_field
         self.city = city
         self.context = context
+        self.correlation_id = correlation_id
         self.is_it_true = is_it_true
         self.lastname = lastname
         self.obj5_opt_id = obj5_opt_id
@@ -535,6 +554,7 @@ class EntTestObjectMutatorCreationAction:
         self.status = status
         self.status_code = status_code
         self.thing_status = thing_status
+        self.trace_id = trace_id
         self.validated_field = validated_field
         self.when_is_it_cool = when_is_it_cool
 
@@ -566,6 +586,7 @@ class EntTestObjectMutatorCreationAction:
             a_pattern_validated_field=self.a_pattern_validated_field,
             city=self.city,
             context=self.context,
+            correlation_id=self.correlation_id,
             is_it_true=self.is_it_true,
             lastname=self.lastname,
             obj5_opt_id=self.obj5_opt_id,
@@ -578,6 +599,7 @@ class EntTestObjectMutatorCreationAction:
             status=self.status,
             status_code=self.status_code,
             thing_status=self.thing_status,
+            trace_id=self.trace_id,
             validated_field=self.validated_field,
             when_is_it_cool=self.when_is_it_cool,
         )
@@ -598,6 +620,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     username: str
     a_pattern_validated_field: str | None = None
     city: str | None = None
+    correlation_id: UUID | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
     obj5_opt_id: UUID | None = None
@@ -610,6 +633,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     status: Status | None = None
     status_code: int | None = None
     thing_status: ThingStatus | None = None
+    trace_id: UUID | None = None
     validated_field: str | None = None
     when_is_it_cool: datetime | None = None
 
@@ -623,6 +647,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         self.username = ent.username
         self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.city = ent.city
+        self.correlation_id = ent.correlation_id
         self.is_it_true = ent.is_it_true
         self.lastname = ent.lastname
         self.obj5_opt_id = ent.obj5_opt_id
@@ -635,6 +660,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         self.status = ent.status
         self.status_code = ent.status_code
         self.thing_status = ent.thing_status
+        self.trace_id = ent.trace_id
         self.validated_field = ent.validated_field
         self.when_is_it_cool = ent.when_is_it_cool
 
@@ -663,6 +689,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.username = self.username
         model.a_pattern_validated_field = self.a_pattern_validated_field
         model.city = self.city
+        model.correlation_id = self.correlation_id
         model.is_it_true = self.is_it_true
         model.lastname = self.lastname
         model.obj5_opt_id = self.obj5_opt_id
@@ -675,6 +702,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.status = self.status
         model.status_code = self.status_code
         model.thing_status = self.thing_status
+        model.trace_id = self.trace_id
         model.validated_field = self.validated_field
         model.when_is_it_cool = self.when_is_it_cool
         session.add(model)
@@ -714,6 +742,7 @@ class EntTestObjectExample:
         a_pattern_validated_field: str | None = None,
         city: str | None = None,
         context: str | None = None,
+        correlation_id: UUID | None = None,
         is_it_true: bool | None = None,
         lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
@@ -726,6 +755,7 @@ class EntTestObjectExample:
         status: Status | None = None,
         status_code: int | None = None,
         thing_status: ThingStatus | None = None,
+        trace_id: UUID | None = None,
         validated_field: str | None = None,
         when_is_it_cool: datetime | None = None,
     ) -> EntTestObject:
@@ -775,6 +805,12 @@ class EntTestObjectExample:
             "This is some good context." if isinstance(context, Sentinel) else context
         )
 
+        correlation_id = (
+            UUID("bb22aaa0-0c20-4567-bdea-64ab1feab425")
+            if isinstance(correlation_id, Sentinel)
+            else correlation_id
+        )
+
         is_it_true = False if isinstance(is_it_true, Sentinel) else is_it_true
 
         if isinstance(obj5_opt_id, Sentinel) or obj5_opt_id is None:
@@ -796,6 +832,17 @@ class EntTestObjectExample:
         status = Status.HAPPY if isinstance(status, Sentinel) else status
 
         status_code = 404 if isinstance(status_code, Sentinel) else status_code
+
+        if isinstance(trace_id, Sentinel):
+            field = _get_field("trace_id")
+            if not isinstance(field, FieldWithDynamicExample):
+                raise TypeError(
+                    "Internal ent error: "
+                    + f"field {field.name} must support dynamic examples."
+                )
+            generator = field.get_example_generator()
+            if generator:
+                trace_id = generator()
 
         if isinstance(when_is_it_cool, Sentinel):
             field = _get_field("when_is_it_cool")
@@ -819,6 +866,7 @@ class EntTestObjectExample:
             a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
+            correlation_id=correlation_id,
             is_it_true=is_it_true,
             lastname=lastname,
             obj5_opt_id=obj5_opt_id,
@@ -831,6 +879,7 @@ class EntTestObjectExample:
             status=status,
             status_code=status_code,
             thing_status=thing_status,
+            trace_id=trace_id,
             validated_field=validated_field,
             when_is_it_cool=when_is_it_cool,
         ).gen_savex()

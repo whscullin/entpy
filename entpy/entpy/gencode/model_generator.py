@@ -12,6 +12,7 @@ from entpy import (
     Schema,
     StringField,
     TextField,
+    UuidField,
 )
 from entpy.framework.descriptor import Descriptor
 from entpy.framework.fields.core import FieldWithDefault
@@ -79,6 +80,9 @@ def generate(descriptor: Descriptor, base_name: str) -> GeneratedContent:
             types_imports.append("from sqlalchemy import Text")
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
             fields_code += f"mapped_column(Text(){common_column_attributes})\n"
+        elif isinstance(field, UuidField):
+            fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
+            fields_code += f"mapped_column(DBUUID(){common_column_attributes})\n"
         elif isinstance(field, EdgeField):
             types_imports.append("from sqlalchemy import ForeignKey")
             edge_base_name = field.edge_class.__name__.replace("Schema", "").replace(

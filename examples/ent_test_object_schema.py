@@ -19,6 +19,7 @@ from entpy import (
     TextField,
     EnumField,
     DatetimeField,
+    UuidField,
 )
 from enum import Enum
 
@@ -60,6 +61,8 @@ class EntTestObjectSchema(Schema):
             JsonField("some_json", "list[str]").example(["hello", "world"]),
             StringField("validated_field", 100).validators([CustomValidator()]),
             BoolField("is_it_true").example(False),
+            UuidField("correlation_id").example(uuid.uuid4()),
+            UuidField("trace_id").dynamic_example(lambda: uuid.uuid4()),
         ]
 
     def get_privacy_rules(self, action: Action) -> list[PrivacyRule]:
