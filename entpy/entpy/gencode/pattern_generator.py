@@ -96,7 +96,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
-from sentinels import Sentinel, NOTHING  # type: ignore
+from sentinels import Sentinel, NOTHING  # type: ignore[import-untyped]
 from typing import Self
 {imports_code}
 

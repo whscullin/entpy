@@ -72,7 +72,7 @@ def generate(schema: Schema, base_name: str, vc_name: str) -> GeneratedContent:
     return GeneratedContent(
         imports=[
             "from entpy import Field, FieldWithDynamicExample",
-            "from sentinels import NOTHING, Sentinel  # type: ignore",
+            "from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]",
             f"from {schema.__class__.__module__} import {schema.__class__.__name__}",
         ],
         code=f"""
