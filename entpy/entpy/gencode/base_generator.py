@@ -101,14 +101,14 @@ class {base_name}({extends}):{get_description(schema)}
         if not model:
             return None
         ent = {base_name}(vc=vc, model=model)
-        decision = await ent._gen_evaluate_privacy(vc=vc, action=Action.READ)  # noqa: SLF001
+        decision = await ent._gen_evaluate_privacy(vc=vc, action=Action.READ)
         return ent if decision == Decision.ALLOW else None
 
     @classmethod
     async def _genx_from_model(
         cls, vc: {vc_name}, model: {base_name}Model
     ) -> {base_name}:
-        ent = await {base_name}._gen_from_model(vc=vc, model=model)  # noqa: SLF001
+        ent = await {base_name}._gen_from_model(vc=vc, model=model)
         if not ent:
             raise EntNotFoundError(f"No {base_name} found for ID {{model.id}}")
         return ent
