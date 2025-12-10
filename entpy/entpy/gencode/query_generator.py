@@ -100,7 +100,10 @@ def _generate_gen_ents(is_pattern: bool, base_name: str) -> str:
     return f"""
     async def _gen_ents(self, result: Result[tuple[{base_name}Model]]) -> list[{i}{base_name} | None]:
         models = result.scalars().all()
-        return [await {base_name}._gen_from_model(self.vc, model) for model in models]
+        return [
+            await {base_name}._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
+        ]
 """  # noqa: E501
 
 
@@ -117,7 +120,7 @@ def _generate_gen_ent(is_pattern: bool, base_name: str) -> str:
     return f"""
     async def _gen_ent(self, result: Result[tuple[{base_name}Model]]) -> {i}{base_name} | None:
         model = result.scalar_one_or_none()
-        return await {i}{base_name}._gen_from_model(self.vc, model)
+        return await {i}{base_name}._gen_from_model(self.vc, model)  # noqa: SLF001
 """  # noqa: E501
 
 

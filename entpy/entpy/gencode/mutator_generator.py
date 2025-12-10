@@ -137,7 +137,7 @@ class {base_name}MutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await {base_name}._genx_from_model(self.vc, model)
+        return await {base_name}._genx_from_model(self.vc, model)  # noqa: SLF001
 """,  # noqa: E501
     )
 
@@ -213,7 +213,7 @@ class {base_name}MutatorUpdateAction{inheritance}:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await {base_name}._genx_from_model(self.vc, model)
+        return await {base_name}._genx_from_model(self.vc, model)  # noqa: SLF001
 """,
     )
 
@@ -265,7 +265,7 @@ def _generate_validations(base_name: str, fields: list[Field]) -> GeneratedConte
     for field in fields:
         if field._validators:
             validations += f"""
-        {field.name}_validators = _get_field("{field.name}")._validators
+        {field.name}_validators = _get_field("{field.name}")._validators  # noqa: SLF001
         for validator in {field.name}_validators:
             if not validator.validate(self.{field.name}):
                 raise ValidationError("Invalid value for {base_name}.{field.name}")

@@ -90,7 +90,7 @@ class {base_name}({extends}):{get_description(schema)}
 
         session = {session_getter_fn_name}()
         model = await session.get({base_name}Model, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     {unique_gens}
 
@@ -101,14 +101,14 @@ class {base_name}({extends}):{get_description(schema)}
         if not model:
             return None
         ent = {base_name}(vc=vc, model=model)
-        decision = await ent._gen_evaluate_privacy(vc=vc, action=Action.READ)
+        decision = await ent._gen_evaluate_privacy(vc=vc, action=Action.READ)  # noqa: SLF001
         return ent if decision == Decision.ALLOW else None
 
     @classmethod
     async def _genx_from_model(
         cls, vc: {vc_name}, model: {base_name}Model
     ) -> {base_name}:
-        ent = await {base_name}._gen_from_model(vc=vc, model=model)
+        ent = await {base_name}._gen_from_model(vc=vc, model=model)  # noqa: SLF001
         if not ent:
             raise EntNotFoundError(f"No {base_name} found for ID {{model.id}}")
         return ent
@@ -188,7 +188,7 @@ def _generate_unique_gens(schema: Schema, base_name: str, vc_name: str) -> str:
             .where({base_name}Model.{field.name} == {field.name})
         )
         model = result.scalar_one_or_none()
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def genx_from_{field.name}(cls, vc: {vc_name}, {field.name}: {field.get_python_type()}) -> {base_name}:
