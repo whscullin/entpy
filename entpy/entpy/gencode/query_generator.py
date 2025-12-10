@@ -12,7 +12,7 @@ def generate(
 
     imports = [
         "from sqlalchemy.sql.expression import ColumnElement",
-        "from typing import Any, TypeVar, Generic",
+        "from typing import Any, TypeVar",
         "from sqlalchemy import select, Select, func, Result",
         "from entpy import EntNotFoundError, ExecutionError",
         "from .ent_query import EntQuery",
