@@ -35,7 +35,7 @@ def generate(schema: Schema, base_name: str, vc_name: str) -> GeneratedContent:
         if isinstance({field.name}, Sentinel):
             field = _get_field("{field.name}")
             if not isinstance(field, FieldWithDynamicExample):
-                raise TypeError("Internal ent error: "+f"field {{field.name}} must support dynamic examples.")
+                raise TypeError("Internal ent error: Field {{field.name}} must support dynamic examples.")
             generator = field.get_example_generator()
             if generator:
                 {field.name} = generator()
