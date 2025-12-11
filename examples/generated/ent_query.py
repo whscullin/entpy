@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Self, TypeVar, Any
+from typing import Self, TypeVar, Any
 from sqlalchemy import Select, Table
 from entpy.framework.ent import Ent
 from sqlalchemy.sql.expression import ColumnElement
@@ -10,7 +10,7 @@ ENT = TypeVar("ENT", bound=Ent)
 ENTMODEL = TypeVar("ENTMODEL")
 
 
-class EntQuery(ABC, Generic[ENT, ENTMODEL]):
+class EntQuery[ENT, ENTMODEL](ABC):
     query: Select[tuple[ENTMODEL]]
 
     def join(

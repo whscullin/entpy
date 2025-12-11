@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 from entpy import Ent, ValidationError
 from datetime import datetime
-from sentinels import Sentinel, NOTHING  # type: ignore
+from sentinels import Sentinel, NOTHING  # type: ignore[import-untyped]
 from .ent_model import EntModel
 from .ent_query import EntQuery
 from database import get_session
@@ -34,13 +34,17 @@ class EntTestThingModel(EntModel):
 
     a_good_thing: Mapped[str] = mapped_column(String(100), nullable=False)
     obj5_id: Mapped[UUID] = mapped_column(
-        DBUUID(), ForeignKey("test_object5.id"), nullable=False
+        DBUUID(),
+        ForeignKey("test_object5.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
     a_pattern_validated_field: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )
     obj5_opt_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(), ForeignKey("test_object5.id"), nullable=True
+        DBUUID(),
+        ForeignKey("test_object5.id", deferrable=True, initially="DEFERRED"),
+        nullable=True,
     )
     thing_status: Mapped[ThingStatus | None] = mapped_column(
         DBEnum(ThingStatus, native_enum=True), nullable=True
@@ -148,7 +152,7 @@ class IEntTestThingQuery(EntQuery[IEntTestThing, UUID]):
         self.vc = vc
         from .ent_test_thing_view import EntTestThingView
 
-        self.query = select(EntTestThingView.__table__)
+        self.query = select(EntTestThingView.id)
 
     async def gen(self) -> list[IEntTestThing]:
         session = get_session()

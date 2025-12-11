@@ -1,4 +1,4 @@
-from entpy import Pattern, Schema
+from entpy import Pattern, Schema, TimeField
 from entpy.framework.fields.edge_field import EdgeField
 from entpy.gencode.generated_content import GeneratedContent
 from entpy.gencode.model_generator import generate as generate_model
@@ -22,7 +22,10 @@ def generate(
 
     # Let's make sure that we require the properties for the pattern fields
     properties = ""
+    time_import_needed = False
     for field in pattern.get_all_fields():
+        if isinstance(field, TimeField):
+            time_import_needed = True
         properties += f"""
     @property
     @abstractmethod
@@ -77,6 +80,11 @@ def generate(
         + gen_edges.imports
         + mutator_content.imports
     )
+
+    # Add time import if needed (detected during properties generation)
+    if time_import_needed:
+        imports.append("from datetime import time")
+
     imports = sorted(set(imports))  # Remove duplicates
     imports_code = "\n".join(imports)
 

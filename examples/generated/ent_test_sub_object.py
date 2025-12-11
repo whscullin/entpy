@@ -20,7 +20,7 @@ from .ent_model import EntModel
 from .ent_query import EntQuery
 from ent_test_sub_object_schema import EntTestSubObjectSchema
 from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import String
 from sqlalchemy import select, func, Result
 from sqlalchemy.orm import Mapped, mapped_column
@@ -91,7 +91,7 @@ class EntTestSubObject(Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntTestSubObjectModel, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -139,7 +139,8 @@ class EntTestSubObjectQuery(EntQuery[EntTestSubObject, EntTestSubObjectModel]):
     ) -> list[EntTestSubObject | None]:
         models = result.scalars().all()
         return [
-            await EntTestSubObject._gen_from_model(self.vc, model) for model in models
+            await EntTestSubObject._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
         ]
 
     async def gen_first(self) -> EntTestSubObject | None:
@@ -151,7 +152,7 @@ class EntTestSubObjectQuery(EntQuery[EntTestSubObject, EntTestSubObjectModel]):
         self, result: Result[tuple[EntTestSubObjectModel]]
     ) -> EntTestSubObject | None:
         model = result.scalar_one_or_none()
-        return await EntTestSubObject._gen_from_model(self.vc, model)
+        return await EntTestSubObject._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntTestSubObject:
         ent = await self.gen_first()
@@ -233,7 +234,7 @@ class EntTestSubObjectMutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntTestSubObject._genx_from_model(self.vc, model)
+        return await EntTestSubObject._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestSubObjectMutatorUpdateAction:
@@ -256,7 +257,7 @@ class EntTestSubObjectMutatorUpdateAction:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntTestSubObject._genx_from_model(self.vc, model)
+        return await EntTestSubObject._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestSubObjectMutatorDeletionAction:
@@ -295,12 +296,12 @@ class EntTestSubObjectExample:
 def _get_field(field_name: str) -> Field:
     schema = EntTestSubObjectSchema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

@@ -20,7 +20,7 @@ from .ent_model import EntModel
 from .ent_query import EntQuery
 from ent_grand_parent_schema import EntGrandParentSchema
 from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import String
 from sqlalchemy import select, func, Result
 from sqlalchemy.orm import Mapped, mapped_column
@@ -89,7 +89,7 @@ class EntGrandParent(Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntGrandParentModel, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -137,7 +137,8 @@ class EntGrandParentQuery(EntQuery[EntGrandParent, EntGrandParentModel]):
     ) -> list[EntGrandParent | None]:
         models = result.scalars().all()
         return [
-            await EntGrandParent._gen_from_model(self.vc, model) for model in models
+            await EntGrandParent._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
         ]
 
     async def gen_first(self) -> EntGrandParent | None:
@@ -149,7 +150,7 @@ class EntGrandParentQuery(EntQuery[EntGrandParent, EntGrandParentModel]):
         self, result: Result[tuple[EntGrandParentModel]]
     ) -> EntGrandParent | None:
         model = result.scalar_one_or_none()
-        return await EntGrandParent._gen_from_model(self.vc, model)
+        return await EntGrandParent._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntGrandParent:
         ent = await self.gen_first()
@@ -231,7 +232,7 @@ class EntGrandParentMutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntGrandParent._genx_from_model(self.vc, model)
+        return await EntGrandParent._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntGrandParentMutatorUpdateAction:
@@ -254,7 +255,7 @@ class EntGrandParentMutatorUpdateAction:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntGrandParent._genx_from_model(self.vc, model)
+        return await EntGrandParent._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntGrandParentMutatorDeletionAction:
@@ -293,12 +294,12 @@ class EntGrandParentExample:
 def _get_field(field_name: str) -> Field:
     schema = EntGrandParentSchema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

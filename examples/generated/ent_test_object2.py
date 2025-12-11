@@ -24,7 +24,7 @@ from .ent_test_thing import IEntTestThingMutatorUpdateAction
 from ent_test_object2_schema import EntTestObject2Schema
 from ent_test_thing_pattern import ThingStatus
 from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import String
 from sqlalchemy import select, func, Result
 from sqlalchemy.orm import Mapped, mapped_column
@@ -129,7 +129,7 @@ class EntTestObject2(IEntTestThing, Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntTestObject2Model, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -177,7 +177,8 @@ class EntTestObject2Query(EntQuery[EntTestObject2, EntTestObject2Model]):
     ) -> list[EntTestObject2 | None]:
         models = result.scalars().all()
         return [
-            await EntTestObject2._gen_from_model(self.vc, model) for model in models
+            await EntTestObject2._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
         ]
 
     async def gen_first(self) -> EntTestObject2 | None:
@@ -189,7 +190,7 @@ class EntTestObject2Query(EntQuery[EntTestObject2, EntTestObject2Model]):
         self, result: Result[tuple[EntTestObject2Model]]
     ) -> EntTestObject2 | None:
         model = result.scalar_one_or_none()
-        return await EntTestObject2._gen_from_model(self.vc, model)
+        return await EntTestObject2._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntTestObject2:
         ent = await self.gen_first()
@@ -293,7 +294,7 @@ class EntTestObject2MutatorCreationAction:
 
         a_pattern_validated_field_validators = _get_field(
             "a_pattern_validated_field"
-        )._validators
+        )._validators  # noqa: SLF001
         for validator in a_pattern_validated_field_validators:
             if not validator.validate(self.a_pattern_validated_field):
                 raise ValidationError(
@@ -313,7 +314,7 @@ class EntTestObject2MutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntTestObject2._genx_from_model(self.vc, model)
+        return await EntTestObject2._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObject2MutatorUpdateAction(IEntTestThingMutatorUpdateAction):
@@ -342,7 +343,7 @@ class EntTestObject2MutatorUpdateAction(IEntTestThingMutatorUpdateAction):
 
         a_pattern_validated_field_validators = _get_field(
             "a_pattern_validated_field"
-        )._validators
+        )._validators  # noqa: SLF001
         for validator in a_pattern_validated_field_validators:
             if not validator.validate(self.a_pattern_validated_field):
                 raise ValidationError(
@@ -360,7 +361,7 @@ class EntTestObject2MutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntTestObject2._genx_from_model(self.vc, model)
+        return await EntTestObject2._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObject2MutatorDeletionAction(IEntTestThingMutatorDeletionAction):
@@ -387,7 +388,7 @@ class EntTestObject2Example:
         created_at: datetime | None = None,
         a_good_thing: str | Sentinel = NOTHING,
         obj5_id: UUID | Sentinel = NOTHING,
-        a_pattern_validated_field: str | None = None,
+        a_pattern_validated_field: str | Sentinel = NOTHING,
         obj5_opt_id: UUID | None = None,
         some_field: str | None = None,
         thing_status: ThingStatus | None = None,
@@ -430,12 +431,12 @@ class EntTestObject2Example:
 def _get_field(field_name: str) -> Field:
     schema = EntTestObject2Schema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

@@ -1,26 +1,20 @@
 from sqlalchemy import (
-    DDL,
-    Column,
-    MetaData,
     Table,
-    event,
     literal_column,
     select,
     union_all,
     Selectable,
 )
-from .ent_test_thing import EntTestThingModel
+from entpy.framework.view import create_view
 from .ent_test_object import EntTestObjectModel
 from .ent_test_object2 import EntTestObject2Model
-from ent_test_thing_pattern import ThingStatus
-from entpy.types import DateTime
-from sqlalchemy import Enum as DBEnum
-from sqlalchemy import String
-from sqlalchemy import UUID as DBUUID
+
+from database import Base
 
 
 view_query: Selectable = union_all(
     select(
+        literal_column("'EntTestObject2Model'").label("ent_type"),
         EntTestObject2Model.id,
         EntTestObject2Model.created_at,
         EntTestObject2Model.updated_at,
@@ -29,9 +23,9 @@ view_query: Selectable = union_all(
         EntTestObject2Model.a_pattern_validated_field,
         EntTestObject2Model.obj5_opt_id,
         EntTestObject2Model.thing_status,
-        literal_column("'EntTestObject2Model'").label("ent_type"),
     ),
     select(
+        literal_column("'EntTestObjectModel'").label("ent_type"),
         EntTestObjectModel.id,
         EntTestObjectModel.created_at,
         EntTestObjectModel.updated_at,
@@ -40,82 +34,13 @@ view_query: Selectable = union_all(
         EntTestObjectModel.a_pattern_validated_field,
         EntTestObjectModel.obj5_opt_id,
         EntTestObjectModel.thing_status,
-        literal_column("'EntTestObjectModel'").label("ent_type"),
     ),
 )
 
 
-# Compile the view query to SQL
-view_sql = str(view_query.compile(compile_kwargs={"literal_binds": True})).replace(
-    "\n", " "
-)
-
-# Create the view DDL with IF NOT EXISTS for idempotency
-create_view_ddl_sqlite = DDL(
-    f"CREATE VIEW IF NOT EXISTS ent_test_thing_view AS {view_sql}"
-)
-create_view_ddl_postgresql = DDL(
-    f"CREATE OR REPLACE VIEW ent_test_thing_view AS {view_sql}"
-)
-
-# Create the drop view DDL with IF EXISTS for idempotency
-drop_view_ddl = DDL("DROP VIEW IF EXISTS ent_test_thing_view")
-
-
-# Create a separate metadata for the view table so it's not
-# processed by create_all/drop_all
-# This prevents SQLAlchemy from trying to CREATE TABLE for the view
-_view_metadata = MetaData()
-
-_view_table = Table(
-    "ent_test_thing_view",
-    _view_metadata,
-    Column("id", DBUUID(), primary_key=True),
-    Column("created_at", DateTime()),
-    Column("updated_at", DateTime()),
-    Column("ent_type", String(50)),
-    Column("a_good_thing", String(100), nullable=False),
-    Column("obj5_id", DBUUID(), nullable=False),
-    Column("a_pattern_validated_field", String(100), nullable=True),
-    Column("obj5_opt_id", DBUUID(), nullable=True),
-    Column("thing_status", DBEnum(ThingStatus, native_enum=True), nullable=True),
-    info={"is_view": True},
-)
-
-
-class EntTestThingView:
-    __table__ = _view_table
-
-    id = __table__.c.id
-    created_at = __table__.c.created_at
-    updated_at = __table__.c.updated_at
-    ent_type = __table__.c.ent_type
-    a_good_thing = __table__.c.a_good_thing
-    obj5_id = __table__.c.obj5_id
-    a_pattern_validated_field = __table__.c.a_pattern_validated_field
-    obj5_opt_id = __table__.c.obj5_opt_id
-    thing_status = __table__.c.thing_status
-
-
-# Register DDL events to create/drop the view on the main metadata
-event.listen(
-    EntTestThingModel.metadata,
-    "after_create",
-    create_view_ddl_sqlite.execute_if(dialect="sqlite"),
-)
-event.listen(
-    EntTestThingModel.metadata,
-    "after_create",
-    create_view_ddl_postgresql.execute_if(dialect="postgresql"),
-)
-
-event.listen(
-    EntTestThingModel.metadata,
-    "before_drop",
-    drop_view_ddl.execute_if(dialect="sqlite"),
-)
-event.listen(
-    EntTestThingModel.metadata,
-    "before_drop",
-    drop_view_ddl.execute_if(dialect="postgresql"),
-)
+class EntTestThingView(Base):
+    __table__: Table = create_view(
+        "ent_test_thing_view",
+        view_query,
+        metadata=Base.metadata,
+    )

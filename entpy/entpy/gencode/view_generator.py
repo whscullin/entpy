@@ -7,6 +7,7 @@ from entpy import (
     JsonField,
     StringField,
     TextField,
+    TimeField,
 )
 from entpy.framework.fields.core import FieldWithDefault
 from entpy.framework.pattern import Pattern
@@ -127,6 +128,9 @@ def _generate_columns(pattern: Pattern) -> GeneratedContent:
         elif isinstance(field, TextField):
             imports.append("from sqlalchemy import Text")
             column_type = "Text()"
+        elif isinstance(field, TimeField):
+            imports.append("from sqlalchemy import Time")
+            column_type = "Time()"
         else:
             raise Exception(f"Unsupported field type: {type(field)}")
 

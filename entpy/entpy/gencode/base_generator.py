@@ -1,4 +1,4 @@
-from entpy import EdgeField, Schema
+from entpy import EdgeField, Schema, TimeField
 from entpy.gencode.generated_content import GeneratedContent
 from entpy.gencode.utils import get_description, to_snake_case
 
@@ -123,8 +123,12 @@ class {base_name}({extends}):{get_description(schema)}
 def _generate_accessors(schema: Schema) -> GeneratedContent:
     fields = schema.get_all_fields()
     accessors_code = ""
+    imports = []
     type_checking_imports = []
+
     for field in fields:
+        if isinstance(field, TimeField):
+            imports.append("from datetime import time")
         accessor_type = field.get_python_type() + (" | None" if field.nullable else "")
         description = field.description
         if description:
@@ -171,7 +175,7 @@ def _generate_accessors(schema: Schema) -> GeneratedContent:
 
 """  # noqa: E501
     return GeneratedContent(
-        type_checking_imports=type_checking_imports, code=accessors_code
+        imports=imports, type_checking_imports=type_checking_imports, code=accessors_code
     )
 
 

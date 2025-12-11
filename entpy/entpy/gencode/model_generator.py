@@ -12,6 +12,7 @@ from entpy import (
     Schema,
     StringField,
     TextField,
+    TimeField,
     UuidField,
 )
 from entpy.framework.descriptor import Descriptor
@@ -80,6 +81,10 @@ def generate(descriptor: Descriptor, base_name: str) -> GeneratedContent:
             types_imports.append("from sqlalchemy import Text")
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
             fields_code += f"mapped_column(Text(){common_column_attributes})\n"
+        elif isinstance(field, TimeField):
+            types_imports.append("from sqlalchemy import Time")
+            fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
+            fields_code += f"mapped_column(Time(){common_column_attributes})\n"
         elif isinstance(field, UuidField):
             fields_code += f"    {field.name}: Mapped[{mapped_type}] = "
             fields_code += f"mapped_column(DBUUID(){common_column_attributes})\n"

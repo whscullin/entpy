@@ -20,7 +20,7 @@ from .ent_model import EntModel
 from .ent_query import EntQuery
 from ent_test_object3_schema import EntTestObject3Schema
 from entpy import Field
-from sentinels import Sentinel  # type: ignore
+from sentinels import Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import ForeignKey
 from sqlalchemy import UUID as DBUUID
 from sqlalchemy import select, func, Result
@@ -36,7 +36,9 @@ class EntTestObject3Model(EntModel):
     __tablename__ = "test_object3"
 
     other_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(), ForeignKey("test_object4.id"), nullable=True
+        DBUUID(),
+        ForeignKey("test_object4.id", deferrable=True, initially="DEFERRED"),
+        nullable=True,
     )
 
 
@@ -103,7 +105,7 @@ class EntTestObject3(Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntTestObject3Model, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -151,7 +153,8 @@ class EntTestObject3Query(EntQuery[EntTestObject3, EntTestObject3Model]):
     ) -> list[EntTestObject3 | None]:
         models = result.scalars().all()
         return [
-            await EntTestObject3._gen_from_model(self.vc, model) for model in models
+            await EntTestObject3._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
         ]
 
     async def gen_first(self) -> EntTestObject3 | None:
@@ -163,7 +166,7 @@ class EntTestObject3Query(EntQuery[EntTestObject3, EntTestObject3Model]):
         self, result: Result[tuple[EntTestObject3Model]]
     ) -> EntTestObject3 | None:
         model = result.scalar_one_or_none()
-        return await EntTestObject3._gen_from_model(self.vc, model)
+        return await EntTestObject3._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntTestObject3:
         ent = await self.gen_first()
@@ -245,7 +248,7 @@ class EntTestObject3MutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntTestObject3._genx_from_model(self.vc, model)
+        return await EntTestObject3._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObject3MutatorUpdateAction:
@@ -268,7 +271,7 @@ class EntTestObject3MutatorUpdateAction:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntTestObject3._genx_from_model(self.vc, model)
+        return await EntTestObject3._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObject3MutatorDeletionAction:
@@ -311,12 +314,12 @@ class EntTestObject3Example:
 def _get_field(field_name: str) -> Field:
     schema = EntTestObject3Schema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

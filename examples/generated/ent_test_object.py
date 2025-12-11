@@ -21,12 +21,13 @@ from .ent_test_thing import EntTestThingModel
 from .ent_test_thing import IEntTestThing
 from .ent_test_thing import IEntTestThingMutatorDeletionAction
 from .ent_test_thing import IEntTestThingMutatorUpdateAction
+from datetime import time
 from ent_test_object_schema import EntTestObjectSchema
 from ent_test_object_schema import Status
 from ent_test_thing_pattern import ThingStatus
 from entpy import Field, FieldWithDynamicExample
 from entpy.types import DateTime
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import Boolean
 from sqlalchemy import Enum as DBEnum
 from sqlalchemy import ForeignKey
@@ -34,6 +35,7 @@ from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import Time
 from sqlalchemy import UUID as DBUUID
 from sqlalchemy import select
 from sqlalchemy import func, Result
@@ -53,32 +55,42 @@ class EntTestObjectModel(EntTestThingModel):
 
     firstname: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     required_sub_object_id: Mapped[UUID] = mapped_column(
-        DBUUID(), ForeignKey("test_sub_object.id"), nullable=False
+        DBUUID(),
+        ForeignKey("test_sub_object.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     context: Mapped[str | None] = mapped_column(Text(), nullable=True)
     correlation_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
+    end_time: Mapped[time | None] = mapped_column(Time(), nullable=True)
     is_it_true: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     lastname: Mapped[str | None] = mapped_column(
         String(100), nullable=True, server_default="Doe"
     )
     optional_sub_object_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(), ForeignKey("test_sub_object.id"), nullable=True
+        DBUUID(),
+        ForeignKey("test_sub_object.id", deferrable=True, initially="DEFERRED"),
+        nullable=True,
     )
     optional_sub_object_no_ex_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(), ForeignKey("test_sub_object.id"), nullable=True
+        DBUUID(),
+        ForeignKey("test_sub_object.id", deferrable=True, initially="DEFERRED"),
+        nullable=True,
     )
     sadness: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True, server_default=Status.SAD.value
     )
     self_id: Mapped[UUID | None] = mapped_column(
-        DBUUID(), ForeignKey("test_object.id"), nullable=True
+        DBUUID(),
+        ForeignKey("test_object.id", deferrable=True, initially="DEFERRED"),
+        nullable=True,
     )
     some_json: Mapped[list[str] | None] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), nullable=True
     )
     some_pattern_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
+    start_time: Mapped[time | None] = mapped_column(Time(), nullable=True)
     status: Mapped[Status | None] = mapped_column(
         DBEnum(Status, native_enum=True), nullable=True
     )
@@ -162,6 +174,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         return self.model.correlation_id
 
     @property
+    def end_time(self) -> time | None:
+        return self.model.end_time
+
+    @property
     def is_it_true(self) -> bool | None:
         return self.model.is_it_true
 
@@ -236,6 +252,10 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         return None
 
     @property
+    def start_time(self) -> time | None:
+        return self.model.start_time
+
+    @property
     def status(self) -> Status | None:
         return self.model.status
 
@@ -291,7 +311,7 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntTestObjectModel, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def gen_from_username(
@@ -302,7 +322,7 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
             select(EntTestObjectModel).where(EntTestObjectModel.username == username)
         )
         model = result.scalar_one_or_none()
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def genx_from_username(
@@ -358,7 +378,10 @@ class EntTestObjectQuery(EntQuery[EntTestObject, EntTestObjectModel]):
         self, result: Result[tuple[EntTestObjectModel]]
     ) -> list[EntTestObject | None]:
         models = result.scalars().all()
-        return [await EntTestObject._gen_from_model(self.vc, model) for model in models]
+        return [
+            await EntTestObject._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
+        ]
 
     async def gen_first(self) -> EntTestObject | None:
         session = get_session()
@@ -369,7 +392,7 @@ class EntTestObjectQuery(EntQuery[EntTestObject, EntTestObjectModel]):
         self, result: Result[tuple[EntTestObjectModel]]
     ) -> EntTestObject | None:
         model = result.scalar_one_or_none()
-        return await EntTestObject._gen_from_model(self.vc, model)
+        return await EntTestObject._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntTestObject:
         ent = await self.gen_first()
@@ -411,6 +434,7 @@ class EntTestObjectMutator:
         city: str | None = None,
         context: str | None = None,
         correlation_id: UUID | None = None,
+        end_time: time | None = None,
         is_it_true: bool | None = None,
         lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
@@ -420,6 +444,7 @@ class EntTestObjectMutator:
         self_id: UUID | None = None,
         some_json: list[str] | None = None,
         some_pattern_id: UUID | None = None,
+        start_time: time | None = None,
         status: Status | None = None,
         status_code: int | None = None,
         thing_status: ThingStatus | None = None,
@@ -442,6 +467,7 @@ class EntTestObjectMutator:
             city=city,
             context=context,
             correlation_id=correlation_id,
+            end_time=end_time,
             is_it_true=is_it_true,
             lastname=lastname,
             obj5_opt_id=obj5_opt_id,
@@ -451,6 +477,7 @@ class EntTestObjectMutator:
             self_id=self_id,
             some_json=some_json,
             some_pattern_id=some_pattern_id,
+            start_time=start_time,
             status=status,
             status_code=status_code,
             thing_status=thing_status,
@@ -484,6 +511,7 @@ class EntTestObjectMutatorCreationAction:
     city: str | None = None
     context: str | None = None
     correlation_id: UUID | None = None
+    end_time: time | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
     obj5_opt_id: UUID | None = None
@@ -493,6 +521,7 @@ class EntTestObjectMutatorCreationAction:
     self_id: UUID | None = None
     some_json: list[str] | None = None
     some_pattern_id: UUID | None = None
+    start_time: time | None = None
     status: Status | None = None
     status_code: int | None = None
     thing_status: ThingStatus | None = None
@@ -514,6 +543,7 @@ class EntTestObjectMutatorCreationAction:
         city: str | None,
         context: str | None,
         correlation_id: UUID | None,
+        end_time: time | None,
         is_it_true: bool | None,
         lastname: str | None,
         obj5_opt_id: UUID | None,
@@ -523,6 +553,7 @@ class EntTestObjectMutatorCreationAction:
         self_id: UUID | None,
         some_json: list[str] | None,
         some_pattern_id: UUID | None,
+        start_time: time | None,
         status: Status | None,
         status_code: int | None,
         thing_status: ThingStatus | None,
@@ -542,6 +573,7 @@ class EntTestObjectMutatorCreationAction:
         self.city = city
         self.context = context
         self.correlation_id = correlation_id
+        self.end_time = end_time
         self.is_it_true = is_it_true
         self.lastname = lastname
         self.obj5_opt_id = obj5_opt_id
@@ -551,6 +583,7 @@ class EntTestObjectMutatorCreationAction:
         self.self_id = self_id
         self.some_json = some_json
         self.some_pattern_id = some_pattern_id
+        self.start_time = start_time
         self.status = status
         self.status_code = status_code
         self.thing_status = thing_status
@@ -563,14 +596,14 @@ class EntTestObjectMutatorCreationAction:
 
         a_pattern_validated_field_validators = _get_field(
             "a_pattern_validated_field"
-        )._validators
+        )._validators  # noqa: SLF001
         for validator in a_pattern_validated_field_validators:
             if not validator.validate(self.a_pattern_validated_field):
                 raise ValidationError(
                     "Invalid value for EntTestObject.a_pattern_validated_field"
                 )
 
-        validated_field_validators = _get_field("validated_field")._validators
+        validated_field_validators = _get_field("validated_field")._validators  # noqa: SLF001
         for validator in validated_field_validators:
             if not validator.validate(self.validated_field):
                 raise ValidationError("Invalid value for EntTestObject.validated_field")
@@ -587,6 +620,7 @@ class EntTestObjectMutatorCreationAction:
             city=self.city,
             context=self.context,
             correlation_id=self.correlation_id,
+            end_time=self.end_time,
             is_it_true=self.is_it_true,
             lastname=self.lastname,
             obj5_opt_id=self.obj5_opt_id,
@@ -596,6 +630,7 @@ class EntTestObjectMutatorCreationAction:
             self_id=self.self_id,
             some_json=self.some_json,
             some_pattern_id=self.some_pattern_id,
+            start_time=self.start_time,
             status=self.status,
             status_code=self.status_code,
             thing_status=self.thing_status,
@@ -606,7 +641,7 @@ class EntTestObjectMutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntTestObject._genx_from_model(self.vc, model)
+        return await EntTestObject._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
@@ -621,6 +656,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     a_pattern_validated_field: str | None = None
     city: str | None = None
     correlation_id: UUID | None = None
+    end_time: time | None = None
     is_it_true: bool | None = None
     lastname: str | None = None
     obj5_opt_id: UUID | None = None
@@ -630,6 +666,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     self_id: UUID | None = None
     some_json: list[str] | None = None
     some_pattern_id: UUID | None = None
+    start_time: time | None = None
     status: Status | None = None
     status_code: int | None = None
     thing_status: ThingStatus | None = None
@@ -648,6 +685,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.city = ent.city
         self.correlation_id = ent.correlation_id
+        self.end_time = ent.end_time
         self.is_it_true = ent.is_it_true
         self.lastname = ent.lastname
         self.obj5_opt_id = ent.obj5_opt_id
@@ -657,6 +695,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         self.self_id = ent.self_id
         self.some_json = ent.some_json
         self.some_pattern_id = ent.some_pattern_id
+        self.start_time = ent.start_time
         self.status = ent.status
         self.status_code = ent.status_code
         self.thing_status = ent.thing_status
@@ -669,14 +708,14 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
 
         a_pattern_validated_field_validators = _get_field(
             "a_pattern_validated_field"
-        )._validators
+        )._validators  # noqa: SLF001
         for validator in a_pattern_validated_field_validators:
             if not validator.validate(self.a_pattern_validated_field):
                 raise ValidationError(
                     "Invalid value for EntTestObject.a_pattern_validated_field"
                 )
 
-        validated_field_validators = _get_field("validated_field")._validators
+        validated_field_validators = _get_field("validated_field")._validators  # noqa: SLF001
         for validator in validated_field_validators:
             if not validator.validate(self.validated_field):
                 raise ValidationError("Invalid value for EntTestObject.validated_field")
@@ -690,6 +729,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.a_pattern_validated_field = self.a_pattern_validated_field
         model.city = self.city
         model.correlation_id = self.correlation_id
+        model.end_time = self.end_time
         model.is_it_true = self.is_it_true
         model.lastname = self.lastname
         model.obj5_opt_id = self.obj5_opt_id
@@ -699,6 +739,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.self_id = self.self_id
         model.some_json = self.some_json
         model.some_pattern_id = self.some_pattern_id
+        model.start_time = self.start_time
         model.status = self.status
         model.status_code = self.status_code
         model.thing_status = self.thing_status
@@ -709,7 +750,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntTestObject._genx_from_model(self.vc, model)
+        return await EntTestObject._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntTestObjectMutatorDeletionAction(IEntTestThingMutatorDeletionAction):
@@ -739,25 +780,27 @@ class EntTestObjectExample:
         obj5_id: UUID | Sentinel = NOTHING,
         required_sub_object_id: UUID | Sentinel = NOTHING,
         username: str | Sentinel = NOTHING,
-        a_pattern_validated_field: str | None = None,
-        city: str | None = None,
-        context: str | None = None,
-        correlation_id: UUID | None = None,
-        is_it_true: bool | None = None,
+        a_pattern_validated_field: str | Sentinel = NOTHING,
+        city: str | Sentinel = NOTHING,
+        context: str | Sentinel = NOTHING,
+        correlation_id: UUID | Sentinel = NOTHING,
+        end_time: time | Sentinel = NOTHING,
+        is_it_true: bool | Sentinel = NOTHING,
         lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
         sadness: Status | None = None,
         self_id: UUID | None = None,
-        some_json: list[str] | None = None,
+        some_json: list[str] | Sentinel = NOTHING,
         some_pattern_id: UUID | None = None,
-        status: Status | None = None,
-        status_code: int | None = None,
+        start_time: time | Sentinel = NOTHING,
+        status: Status | Sentinel = NOTHING,
+        status_code: int | Sentinel = NOTHING,
         thing_status: ThingStatus | None = None,
-        trace_id: UUID | None = None,
+        trace_id: UUID | Sentinel = NOTHING,
         validated_field: str | None = None,
-        when_is_it_cool: datetime | None = None,
+        when_is_it_cool: datetime | Sentinel = NOTHING,
     ) -> EntTestObject:
         # TODO make sure we only use this in test mode
 
@@ -786,8 +829,7 @@ class EntTestObjectExample:
             field = _get_field("username")
             if not isinstance(field, FieldWithDynamicExample):
                 raise TypeError(
-                    "Internal ent error: "
-                    + f"field {field.name} must support dynamic examples."
+                    "Internal ent error: Field {field.name} must support dynamic examples."
                 )
             generator = field.get_example_generator()
             if generator:
@@ -806,10 +848,20 @@ class EntTestObjectExample:
         )
 
         correlation_id = (
-            UUID("bb22aaa0-0c20-4567-bdea-64ab1feab425")
+            UUID("a0aa6b3d-6931-47a7-bc24-1ab1ab03bb75")
             if isinstance(correlation_id, Sentinel)
             else correlation_id
         )
+
+        if isinstance(end_time, Sentinel):
+            field = _get_field("end_time")
+            if not isinstance(field, FieldWithDynamicExample):
+                raise TypeError(
+                    "Internal ent error: Field {field.name} must support dynamic examples."
+                )
+            generator = field.get_example_generator()
+            if generator:
+                end_time = generator()
 
         is_it_true = False if isinstance(is_it_true, Sentinel) else is_it_true
 
@@ -829,6 +881,12 @@ class EntTestObjectExample:
             optional_sub_object_id = optional_sub_object_id_ent.id
         some_json = ["hello", "world"] if isinstance(some_json, Sentinel) else some_json
 
+        start_time = (
+            time.fromisoformat("09:30:00")
+            if isinstance(start_time, Sentinel)
+            else start_time
+        )
+
         status = Status.HAPPY if isinstance(status, Sentinel) else status
 
         status_code = 404 if isinstance(status_code, Sentinel) else status_code
@@ -837,8 +895,7 @@ class EntTestObjectExample:
             field = _get_field("trace_id")
             if not isinstance(field, FieldWithDynamicExample):
                 raise TypeError(
-                    "Internal ent error: "
-                    + f"field {field.name} must support dynamic examples."
+                    "Internal ent error: Field {field.name} must support dynamic examples."
                 )
             generator = field.get_example_generator()
             if generator:
@@ -848,8 +905,7 @@ class EntTestObjectExample:
             field = _get_field("when_is_it_cool")
             if not isinstance(field, FieldWithDynamicExample):
                 raise TypeError(
-                    "Internal ent error: "
-                    + f"field {field.name} must support dynamic examples."
+                    "Internal ent error: Field {field.name} must support dynamic examples."
                 )
             generator = field.get_example_generator()
             if generator:
@@ -867,6 +923,7 @@ class EntTestObjectExample:
             city=city,
             context=context,
             correlation_id=correlation_id,
+            end_time=end_time,
             is_it_true=is_it_true,
             lastname=lastname,
             obj5_opt_id=obj5_opt_id,
@@ -876,6 +933,7 @@ class EntTestObjectExample:
             self_id=self_id,
             some_json=some_json,
             some_pattern_id=some_pattern_id,
+            start_time=start_time,
             status=status,
             status_code=status_code,
             thing_status=thing_status,
@@ -888,12 +946,12 @@ class EntTestObjectExample:
 def _get_field(field_name: str) -> Field:
     schema = EntTestObjectSchema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

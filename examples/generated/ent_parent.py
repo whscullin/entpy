@@ -20,7 +20,7 @@ from .ent_model import EntModel
 from .ent_query import EntQuery
 from ent_parent_schema import EntParentSchema
 from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy import UUID as DBUUID
@@ -37,7 +37,9 @@ class EntParentModel(EntModel):
     __tablename__ = "parent"
 
     grand_parent_id: Mapped[UUID] = mapped_column(
-        DBUUID(), ForeignKey("grand_parent.id"), nullable=False
+        DBUUID(),
+        ForeignKey("grand_parent.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
 
@@ -107,7 +109,7 @@ class EntParent(Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntParentModel, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -154,7 +156,10 @@ class EntParentQuery(EntQuery[EntParent, EntParentModel]):
         self, result: Result[tuple[EntParentModel]]
     ) -> list[EntParent | None]:
         models = result.scalars().all()
-        return [await EntParent._gen_from_model(self.vc, model) for model in models]
+        return [
+            await EntParent._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
+        ]
 
     async def gen_first(self) -> EntParent | None:
         session = get_session()
@@ -163,7 +168,7 @@ class EntParentQuery(EntQuery[EntParent, EntParentModel]):
 
     async def _gen_ent(self, result: Result[tuple[EntParentModel]]) -> EntParent | None:
         model = result.scalar_one_or_none()
-        return await EntParent._gen_from_model(self.vc, model)
+        return await EntParent._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntParent:
         ent = await self.gen_first()
@@ -254,7 +259,7 @@ class EntParentMutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntParent._genx_from_model(self.vc, model)
+        return await EntParent._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntParentMutatorUpdateAction:
@@ -280,7 +285,7 @@ class EntParentMutatorUpdateAction:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntParent._genx_from_model(self.vc, model)
+        return await EntParent._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntParentMutatorDeletionAction:
@@ -325,12 +330,12 @@ class EntParentExample:
 def _get_field(field_name: str) -> Field:
     schema = EntParentSchema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field

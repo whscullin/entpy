@@ -1,6 +1,6 @@
 import re
 import uuid
-from datetime import datetime, UTC
+from datetime import datetime, time, UTC
 from ent_test_sub_object_schema import EntTestSubObjectSchema
 from ent_test_thing_pattern import EntTestThingPattern
 from entpy import (
@@ -17,6 +17,7 @@ from entpy import (
     Schema,
     StringField,
     TextField,
+    TimeField,
     EnumField,
     DatetimeField,
     UuidField,
@@ -63,6 +64,8 @@ class EntTestObjectSchema(Schema):
             BoolField("is_it_true").example(False),
             UuidField("correlation_id").example(uuid.uuid4()),
             UuidField("trace_id").dynamic_example(lambda: uuid.uuid4()),
+            TimeField("start_time").example(time(9, 30, 0)),
+            TimeField("end_time").dynamic_example(lambda: time(17, 30, 0)),
         ]
 
     def get_privacy_rules(self, action: Action) -> list[PrivacyRule]:

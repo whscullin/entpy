@@ -20,7 +20,7 @@ from .ent_model import EntModel
 from .ent_query import EntQuery
 from ent_child_schema import EntChildSchema
 from entpy import Field
-from sentinels import NOTHING, Sentinel  # type: ignore
+from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy import UUID as DBUUID
@@ -38,7 +38,9 @@ class EntChildModel(EntModel):
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     parent_id: Mapped[UUID] = mapped_column(
-        DBUUID(), ForeignKey("parent.id"), nullable=False
+        DBUUID(),
+        ForeignKey("parent.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
 
 
@@ -105,7 +107,7 @@ class EntChild(Ent[ExampleViewerContext]):
 
         session = get_session()
         model = await session.get(EntChildModel, ent_id)
-        return await cls._gen_from_model(vc, model)
+        return await cls._gen_from_model(vc, model)  # noqa: SLF001
 
     @classmethod
     async def _gen_from_model(
@@ -152,7 +154,10 @@ class EntChildQuery(EntQuery[EntChild, EntChildModel]):
         self, result: Result[tuple[EntChildModel]]
     ) -> list[EntChild | None]:
         models = result.scalars().all()
-        return [await EntChild._gen_from_model(self.vc, model) for model in models]
+        return [
+            await EntChild._gen_from_model(self.vc, model)  # noqa: SLF001
+            for model in models
+        ]
 
     async def gen_first(self) -> EntChild | None:
         session = get_session()
@@ -161,7 +166,7 @@ class EntChildQuery(EntQuery[EntChild, EntChildModel]):
 
     async def _gen_ent(self, result: Result[tuple[EntChildModel]]) -> EntChild | None:
         model = result.scalar_one_or_none()
-        return await EntChild._gen_from_model(self.vc, model)
+        return await EntChild._gen_from_model(self.vc, model)  # noqa: SLF001
 
     async def genx_first(self) -> EntChild:
         ent = await self.gen_first()
@@ -248,7 +253,7 @@ class EntChildMutatorCreationAction:
         session.add(model)
         await session.flush()
         # TODO privacy checks
-        return await EntChild._genx_from_model(self.vc, model)
+        return await EntChild._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntChildMutatorUpdateAction:
@@ -274,7 +279,7 @@ class EntChildMutatorUpdateAction:
         await session.flush()
         await session.refresh(model)
         # TODO privacy checks
-        return await EntChild._genx_from_model(self.vc, model)
+        return await EntChild._genx_from_model(self.vc, model)  # noqa: SLF001
 
 
 class EntChildMutatorDeletionAction:
@@ -320,12 +325,12 @@ class EntChildExample:
 def _get_field(field_name: str) -> Field:
     schema = EntChildSchema()
     fields = schema.get_all_fields()
-    field = list(
+    field = next(
         filter(
             lambda field: field.name == field_name,
             fields,
         )
-    )[0]
+    )
     if not field:
         raise ValueError(f"Unknown field: {field_name}")
     return field
