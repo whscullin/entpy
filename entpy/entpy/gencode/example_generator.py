@@ -12,7 +12,14 @@ def generate(schema: Schema, base_name: str, vc_name: str) -> GeneratedContent:
     arguments_definition = ""
     for field in schema.get_all_fields():
         typehint = field.get_python_type()
-        typehint += " | None = None" if field.nullable else " | Sentinel = NOTHING"
+        # Use Sentinel for fields with examples so we can distinguish between
+        # "no value provided" and "explicitly set to None"
+        has_example = (isinstance(field, FieldWithExample) and field.get_example_as_string()) or \
+                      (isinstance(field, FieldWithDynamicExample) and field.get_example_generator())
+        if field.nullable and not has_example:
+            typehint += " | None = None"
+        else:
+            typehint += " | Sentinel = NOTHING"
         arguments_definition += f", {field.name}: {typehint}"
 
     # Build up the list of variables that will be passed to the mutator
