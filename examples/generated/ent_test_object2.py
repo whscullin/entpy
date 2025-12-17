@@ -231,11 +231,13 @@ class EntTestObject2Mutator:
         thing_status: ThingStatus | None = None,
         id: UUID | None = None,
         created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ) -> EntTestObject2MutatorCreationAction:
         return EntTestObject2MutatorCreationAction(
             vc=vc,
             id=id,
             created_at=created_at,
+            updated_at=updated_at,
             a_good_thing=a_good_thing,
             obj5_id=obj5_id,
             a_pattern_validated_field=a_pattern_validated_field,
@@ -272,6 +274,7 @@ class EntTestObject2MutatorCreationAction:
         vc: ExampleViewerContext,
         id: UUID | None,
         created_at: datetime | None,
+        updated_at: datetime | None,
         a_good_thing: str,
         obj5_id: UUID,
         a_pattern_validated_field: str | None,
@@ -281,6 +284,7 @@ class EntTestObject2MutatorCreationAction:
     ) -> None:
         self.vc = vc
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
+        self.updated_at = updated_at if updated_at else self.created_at
         self.id = id if id else generate_uuid(EntTestObject2, self.created_at)
         self.a_good_thing = a_good_thing
         self.obj5_id = obj5_id
@@ -303,6 +307,7 @@ class EntTestObject2MutatorCreationAction:
 
         model = EntTestObject2Model(
             id=self.id,
+            updated_at=self.updated_at,
             created_at=self.created_at,
             a_good_thing=self.a_good_thing,
             obj5_id=self.obj5_id,
@@ -357,6 +362,7 @@ class EntTestObject2MutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.obj5_opt_id = self.obj5_opt_id
         model.some_field = self.some_field
         model.thing_status = self.thing_status
+        model.updated_at = datetime.now(tz=UTC)
         session.add(model)
         await session.flush()
         await session.refresh(model)

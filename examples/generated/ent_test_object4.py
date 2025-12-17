@@ -202,9 +202,14 @@ class EntTestObject4Mutator:
         other_id: UUID | None = None,
         id: UUID | None = None,
         created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ) -> EntTestObject4MutatorCreationAction:
         return EntTestObject4MutatorCreationAction(
-            vc=vc, id=id, created_at=created_at, other_id=other_id
+            vc=vc,
+            id=id,
+            created_at=created_at,
+            updated_at=updated_at,
+            other_id=other_id,
         )
 
     @classmethod
@@ -230,10 +235,12 @@ class EntTestObject4MutatorCreationAction:
         vc: ExampleViewerContext,
         id: UUID | None,
         created_at: datetime | None,
+        updated_at: datetime | None,
         other_id: UUID | None,
     ) -> None:
         self.vc = vc
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
+        self.updated_at = updated_at if updated_at else self.created_at
         self.id = id if id else generate_uuid(EntTestObject4, self.created_at)
         self.other_id = other_id
 
@@ -242,6 +249,7 @@ class EntTestObject4MutatorCreationAction:
 
         model = EntTestObject4Model(
             id=self.id,
+            updated_at=self.updated_at,
             created_at=self.created_at,
             other_id=self.other_id,
         )
@@ -267,6 +275,7 @@ class EntTestObject4MutatorUpdateAction:
 
         model = self.ent.model
         model.other_id = self.other_id
+        model.updated_at = datetime.now(tz=UTC)
         session.add(model)
         await session.flush()
         await session.refresh(model)

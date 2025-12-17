@@ -186,9 +186,10 @@ class EntGrandParentMutator:
         name: str,
         id: UUID | None = None,
         created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ) -> EntGrandParentMutatorCreationAction:
         return EntGrandParentMutatorCreationAction(
-            vc=vc, id=id, created_at=created_at, name=name
+            vc=vc, id=id, created_at=created_at, updated_at=updated_at, name=name
         )
 
     @classmethod
@@ -214,10 +215,12 @@ class EntGrandParentMutatorCreationAction:
         vc: ExampleViewerContext,
         id: UUID | None,
         created_at: datetime | None,
+        updated_at: datetime | None,
         name: str,
     ) -> None:
         self.vc = vc
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
+        self.updated_at = updated_at if updated_at else self.created_at
         self.id = id if id else generate_uuid(EntGrandParent, self.created_at)
         self.name = name
 
@@ -226,6 +229,7 @@ class EntGrandParentMutatorCreationAction:
 
         model = EntGrandParentModel(
             id=self.id,
+            updated_at=self.updated_at,
             created_at=self.created_at,
             name=self.name,
         )
@@ -251,6 +255,7 @@ class EntGrandParentMutatorUpdateAction:
 
         model = self.ent.model
         model.name = self.name
+        model.updated_at = datetime.now(tz=UTC)
         session.add(model)
         await session.flush()
         await session.refresh(model)

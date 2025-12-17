@@ -453,11 +453,13 @@ class EntTestObjectMutator:
         when_is_it_cool: datetime | None = None,
         id: UUID | None = None,
         created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ) -> EntTestObjectMutatorCreationAction:
         return EntTestObjectMutatorCreationAction(
             vc=vc,
             id=id,
             created_at=created_at,
+            updated_at=updated_at,
             a_good_thing=a_good_thing,
             firstname=firstname,
             obj5_id=obj5_id,
@@ -534,6 +536,7 @@ class EntTestObjectMutatorCreationAction:
         vc: ExampleViewerContext,
         id: UUID | None,
         created_at: datetime | None,
+        updated_at: datetime | None,
         a_good_thing: str,
         firstname: str,
         obj5_id: UUID,
@@ -563,6 +566,7 @@ class EntTestObjectMutatorCreationAction:
     ) -> None:
         self.vc = vc
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
+        self.updated_at = updated_at if updated_at else self.created_at
         self.id = id if id else generate_uuid(EntTestObject, self.created_at)
         self.a_good_thing = a_good_thing
         self.firstname = firstname
@@ -610,6 +614,7 @@ class EntTestObjectMutatorCreationAction:
 
         model = EntTestObjectModel(
             id=self.id,
+            updated_at=self.updated_at,
             created_at=self.created_at,
             a_good_thing=self.a_good_thing,
             firstname=self.firstname,
@@ -746,6 +751,7 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.trace_id = self.trace_id
         model.validated_field = self.validated_field
         model.when_is_it_cool = self.when_is_it_cool
+        model.updated_at = datetime.now(tz=UTC)
         session.add(model)
         await session.flush()
         await session.refresh(model)
@@ -848,7 +854,7 @@ class EntTestObjectExample:
         )
 
         correlation_id = (
-            UUID("a0aa6b3d-6931-47a7-bc24-1ab1ab03bb75")
+            UUID("061be863-3bea-41fc-bcfa-a8a5c3a81733")
             if isinstance(correlation_id, Sentinel)
             else correlation_id
         )
