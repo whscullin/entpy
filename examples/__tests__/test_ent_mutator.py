@@ -1,15 +1,16 @@
 import uuid
-import pytest
 
+import pytest
+from entpy import ValidationError
+
+from evc import ExampleViewerContext
 from generated.ent_test_object import (
     EntTestObject,
     EntTestObjectExample,
     EntTestObjectMutator,
 )
+from generated.ent_test_object5 import EntTestObject5Example, EntTestObject5Mutator
 from generated.ent_test_sub_object import EntTestSubObject  # noqa: F401
-from generated.ent_test_object5 import EntTestObject5Example
-from evc import ExampleViewerContext
-from entpy import ValidationError
 
 
 async def test_creation(vc: ExampleViewerContext) -> None:
@@ -101,3 +102,9 @@ async def test_update_validated_pattern_field(vc: ExampleViewerContext) -> None:
     ent = await mut.gen_savex()
 
     assert ent.a_pattern_validated_field == "yolo"
+
+
+async def test_create_with_boolfield_with_default(vc: ExampleViewerContext) -> None:
+    ent = await EntTestObject5Mutator.create(vc=vc, obj5_field="Yo!").gen_savex()
+    assert ent is not None
+    assert ent.is_it_true

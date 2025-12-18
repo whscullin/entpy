@@ -28,5 +28,11 @@ class EnumField(
 
     def generate_default(self) -> str | None:
         if self._default_value:
+            return f"{self._default_value}"
+        return None
+
+    def generate_sql_default(self) -> bool | None:
+        # SQL ALchemy expects lowercase defaults
+        if self._default_value is not None:
             return f"{self._default_value}.value"
         return None

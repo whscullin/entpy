@@ -21,6 +21,7 @@ from .ent_query import EntQuery
 from ent_test_object5_schema import EntTestObject5Schema
 from entpy import Field
 from sentinels import NOTHING, Sentinel  # type: ignore[import-untyped]
+from sqlalchemy import Boolean
 from sqlalchemy import String
 from sqlalchemy import select, func, Result
 from sqlalchemy.orm import Mapped, mapped_column
@@ -31,6 +32,9 @@ class EntTestObject5Model(EntModel):
     __tablename__ = "test_object5"
 
     obj5_field: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_it_true: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, server_default="true"
+    )
 
 
 class EntTestObject5(Ent[ExampleViewerContext]):
@@ -56,6 +60,10 @@ class EntTestObject5(Ent[ExampleViewerContext]):
     @property
     def obj5_field(self) -> str:
         return self.model.obj5_field
+
+    @property
+    def is_it_true(self) -> bool:
+        return self.model.is_it_true
 
     async def _gen_evaluate_privacy(
         self, vc: ExampleViewerContext, action: Action
@@ -184,6 +192,7 @@ class EntTestObject5Mutator:
         cls,
         vc: ExampleViewerContext,
         obj5_field: str,
+        is_it_true: bool = True,
         id: UUID | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
@@ -194,6 +203,7 @@ class EntTestObject5Mutator:
             created_at=created_at,
             updated_at=updated_at,
             obj5_field=obj5_field,
+            is_it_true=is_it_true,
         )
 
     @classmethod
@@ -213,6 +223,7 @@ class EntTestObject5MutatorCreationAction:
     vc: ExampleViewerContext
     id: UUID
     obj5_field: str
+    is_it_true: bool
 
     def __init__(
         self,
@@ -221,12 +232,14 @@ class EntTestObject5MutatorCreationAction:
         created_at: datetime | None,
         updated_at: datetime | None,
         obj5_field: str,
+        is_it_true: bool,
     ) -> None:
         self.vc = vc
         self.created_at = created_at if created_at else datetime.now(tz=UTC)
         self.updated_at = updated_at if updated_at else self.created_at
         self.id = id if id else generate_uuid(EntTestObject5, self.created_at)
         self.obj5_field = obj5_field
+        self.is_it_true = is_it_true
 
     async def gen_savex(self) -> EntTestObject5:
         session = get_session()
@@ -236,6 +249,7 @@ class EntTestObject5MutatorCreationAction:
             updated_at=self.updated_at,
             created_at=self.created_at,
             obj5_field=self.obj5_field,
+            is_it_true=self.is_it_true,
         )
         session.add(model)
         await session.flush()
@@ -248,17 +262,20 @@ class EntTestObject5MutatorUpdateAction:
     ent: EntTestObject5
     id: UUID
     obj5_field: str
+    is_it_true: bool
 
     def __init__(self, vc: ExampleViewerContext, ent: EntTestObject5) -> None:
         self.vc = vc
         self.ent = ent
         self.obj5_field = ent.obj5_field
+        self.is_it_true = ent.is_it_true
 
     async def gen_savex(self) -> EntTestObject5:
         session = get_session()
 
         model = self.ent.model
         model.obj5_field = self.obj5_field
+        model.is_it_true = self.is_it_true
         model.updated_at = datetime.now(tz=UTC)
         session.add(model)
         await session.flush()
@@ -290,13 +307,16 @@ class EntTestObject5Example:
         vc: ExampleViewerContext,
         created_at: datetime | None = None,
         obj5_field: str | Sentinel = NOTHING,
+        is_it_true: bool | Sentinel = NOTHING,
     ) -> EntTestObject5:
         # TODO make sure we only use this in test mode
 
         obj5_field = "blah!" if isinstance(obj5_field, Sentinel) else obj5_field
 
+        is_it_true = True if isinstance(is_it_true, Sentinel) else is_it_true
+
         return await EntTestObject5Mutator.create(
-            vc=vc, created_at=created_at, obj5_field=obj5_field
+            vc=vc, created_at=created_at, obj5_field=obj5_field, is_it_true=is_it_true
         ).gen_savex()
 
 

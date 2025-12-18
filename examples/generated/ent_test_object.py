@@ -60,14 +60,17 @@ class EntTestObjectModel(EntTestThingModel):
         nullable=False,
     )
     username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    lastname: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, server_default="Doe"
+    )
+    sadness: Mapped[Status | None] = mapped_column(
+        DBEnum(Status, native_enum=True), nullable=True, server_default=Status.SAD.value
+    )
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     context: Mapped[str | None] = mapped_column(Text(), nullable=True)
     correlation_id: Mapped[UUID | None] = mapped_column(DBUUID(), nullable=True)
     end_time: Mapped[time | None] = mapped_column(Time(), nullable=True)
     is_it_true: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
-    lastname: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, server_default="Doe"
-    )
     optional_sub_object_id: Mapped[UUID | None] = mapped_column(
         DBUUID(),
         ForeignKey("test_sub_object.id", deferrable=True, initially="DEFERRED"),
@@ -77,9 +80,6 @@ class EntTestObjectModel(EntTestThingModel):
         DBUUID(),
         ForeignKey("test_sub_object.id", deferrable=True, initially="DEFERRED"),
         nullable=True,
-    )
-    sadness: Mapped[Status | None] = mapped_column(
-        DBEnum(Status, native_enum=True), nullable=True, server_default=Status.SAD.value
     )
     self_id: Mapped[UUID | None] = mapped_column(
         DBUUID(),
@@ -158,6 +158,14 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
         return self.model.username
 
     @property
+    def lastname(self) -> str | None:
+        return self.model.lastname
+
+    @property
+    def sadness(self) -> Status | None:
+        return self.model.sadness
+
+    @property
     def a_pattern_validated_field(self) -> str | None:
         return self.model.a_pattern_validated_field
 
@@ -180,10 +188,6 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
     @property
     def is_it_true(self) -> bool | None:
         return self.model.is_it_true
-
-    @property
-    def lastname(self) -> str | None:
-        return self.model.lastname
 
     @property
     def obj5_opt_id(self) -> UUID | None:
@@ -221,10 +225,6 @@ class EntTestObject(IEntTestThing, Ent[ExampleViewerContext]):
                 self.vc, self.model.optional_sub_object_no_ex_id
             )
         return None
-
-    @property
-    def sadness(self) -> Status | None:
-        return self.model.sadness
 
     @property
     def self_id(self) -> UUID | None:
@@ -430,17 +430,17 @@ class EntTestObjectMutator:
         obj5_id: UUID,
         required_sub_object_id: UUID,
         username: str,
+        lastname: str | None = None,
+        sadness: Status | None = None,
         a_pattern_validated_field: str | None = None,
         city: str | None = None,
         context: str | None = None,
         correlation_id: UUID | None = None,
         end_time: time | None = None,
         is_it_true: bool | None = None,
-        lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
-        sadness: Status | None = None,
         self_id: UUID | None = None,
         some_json: list[str] | None = None,
         some_pattern_id: UUID | None = None,
@@ -465,17 +465,17 @@ class EntTestObjectMutator:
             obj5_id=obj5_id,
             required_sub_object_id=required_sub_object_id,
             username=username,
+            lastname=lastname,
+            sadness=sadness,
             a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
             correlation_id=correlation_id,
             end_time=end_time,
             is_it_true=is_it_true,
-            lastname=lastname,
             obj5_opt_id=obj5_opt_id,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
-            sadness=sadness,
             self_id=self_id,
             some_json=some_json,
             some_pattern_id=some_pattern_id,
@@ -509,17 +509,17 @@ class EntTestObjectMutatorCreationAction:
     obj5_id: UUID
     required_sub_object_id: UUID
     username: str
+    lastname: str | None = None
+    sadness: Status | None = None
     a_pattern_validated_field: str | None = None
     city: str | None = None
     context: str | None = None
     correlation_id: UUID | None = None
     end_time: time | None = None
     is_it_true: bool | None = None
-    lastname: str | None = None
     obj5_opt_id: UUID | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
-    sadness: Status | None = None
     self_id: UUID | None = None
     some_json: list[str] | None = None
     some_pattern_id: UUID | None = None
@@ -542,17 +542,17 @@ class EntTestObjectMutatorCreationAction:
         obj5_id: UUID,
         required_sub_object_id: UUID,
         username: str,
+        lastname: str | None,
+        sadness: Status | None,
         a_pattern_validated_field: str | None,
         city: str | None,
         context: str | None,
         correlation_id: UUID | None,
         end_time: time | None,
         is_it_true: bool | None,
-        lastname: str | None,
         obj5_opt_id: UUID | None,
         optional_sub_object_id: UUID | None,
         optional_sub_object_no_ex_id: UUID | None,
-        sadness: Status | None,
         self_id: UUID | None,
         some_json: list[str] | None,
         some_pattern_id: UUID | None,
@@ -573,17 +573,17 @@ class EntTestObjectMutatorCreationAction:
         self.obj5_id = obj5_id
         self.required_sub_object_id = required_sub_object_id
         self.username = username
+        self.lastname = lastname
+        self.sadness = sadness
         self.a_pattern_validated_field = a_pattern_validated_field
         self.city = city
         self.context = context
         self.correlation_id = correlation_id
         self.end_time = end_time
         self.is_it_true = is_it_true
-        self.lastname = lastname
         self.obj5_opt_id = obj5_opt_id
         self.optional_sub_object_id = optional_sub_object_id
         self.optional_sub_object_no_ex_id = optional_sub_object_no_ex_id
-        self.sadness = sadness
         self.self_id = self_id
         self.some_json = some_json
         self.some_pattern_id = some_pattern_id
@@ -621,17 +621,17 @@ class EntTestObjectMutatorCreationAction:
             obj5_id=self.obj5_id,
             required_sub_object_id=self.required_sub_object_id,
             username=self.username,
+            lastname=self.lastname,
+            sadness=self.sadness,
             a_pattern_validated_field=self.a_pattern_validated_field,
             city=self.city,
             context=self.context,
             correlation_id=self.correlation_id,
             end_time=self.end_time,
             is_it_true=self.is_it_true,
-            lastname=self.lastname,
             obj5_opt_id=self.obj5_opt_id,
             optional_sub_object_id=self.optional_sub_object_id,
             optional_sub_object_no_ex_id=self.optional_sub_object_no_ex_id,
-            sadness=self.sadness,
             self_id=self.self_id,
             some_json=self.some_json,
             some_pattern_id=self.some_pattern_id,
@@ -658,16 +658,16 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
     obj5_id: UUID
     required_sub_object_id: UUID
     username: str
+    lastname: str | None = None
+    sadness: Status | None = None
     a_pattern_validated_field: str | None = None
     city: str | None = None
     correlation_id: UUID | None = None
     end_time: time | None = None
     is_it_true: bool | None = None
-    lastname: str | None = None
     obj5_opt_id: UUID | None = None
     optional_sub_object_id: UUID | None = None
     optional_sub_object_no_ex_id: UUID | None = None
-    sadness: Status | None = None
     self_id: UUID | None = None
     some_json: list[str] | None = None
     some_pattern_id: UUID | None = None
@@ -687,16 +687,16 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         self.obj5_id = ent.obj5_id
         self.required_sub_object_id = ent.required_sub_object_id
         self.username = ent.username
+        self.lastname = ent.lastname
+        self.sadness = ent.sadness
         self.a_pattern_validated_field = ent.a_pattern_validated_field
         self.city = ent.city
         self.correlation_id = ent.correlation_id
         self.end_time = ent.end_time
         self.is_it_true = ent.is_it_true
-        self.lastname = ent.lastname
         self.obj5_opt_id = ent.obj5_opt_id
         self.optional_sub_object_id = ent.optional_sub_object_id
         self.optional_sub_object_no_ex_id = ent.optional_sub_object_no_ex_id
-        self.sadness = ent.sadness
         self.self_id = ent.self_id
         self.some_json = ent.some_json
         self.some_pattern_id = ent.some_pattern_id
@@ -731,16 +731,16 @@ class EntTestObjectMutatorUpdateAction(IEntTestThingMutatorUpdateAction):
         model.obj5_id = self.obj5_id
         model.required_sub_object_id = self.required_sub_object_id
         model.username = self.username
+        model.lastname = self.lastname
+        model.sadness = self.sadness
         model.a_pattern_validated_field = self.a_pattern_validated_field
         model.city = self.city
         model.correlation_id = self.correlation_id
         model.end_time = self.end_time
         model.is_it_true = self.is_it_true
-        model.lastname = self.lastname
         model.obj5_opt_id = self.obj5_opt_id
         model.optional_sub_object_id = self.optional_sub_object_id
         model.optional_sub_object_no_ex_id = self.optional_sub_object_no_ex_id
-        model.sadness = self.sadness
         model.self_id = self.self_id
         model.some_json = self.some_json
         model.some_pattern_id = self.some_pattern_id
@@ -786,17 +786,17 @@ class EntTestObjectExample:
         obj5_id: UUID | Sentinel = NOTHING,
         required_sub_object_id: UUID | Sentinel = NOTHING,
         username: str | Sentinel = NOTHING,
+        lastname: str | None = None,
+        sadness: Status | None = None,
         a_pattern_validated_field: str | Sentinel = NOTHING,
         city: str | Sentinel = NOTHING,
         context: str | Sentinel = NOTHING,
         correlation_id: UUID | Sentinel = NOTHING,
         end_time: time | Sentinel = NOTHING,
         is_it_true: bool | Sentinel = NOTHING,
-        lastname: str | None = None,
         obj5_opt_id: UUID | None = None,
         optional_sub_object_id: UUID | None = None,
         optional_sub_object_no_ex_id: UUID | None = None,
-        sadness: Status | None = None,
         self_id: UUID | None = None,
         some_json: list[str] | Sentinel = NOTHING,
         some_pattern_id: UUID | None = None,
@@ -841,6 +841,10 @@ class EntTestObjectExample:
             if generator:
                 username = generator()
 
+        lastname = "Doe" if isinstance(lastname, Sentinel) else lastname
+
+        sadness = Status.SAD if isinstance(sadness, Sentinel) else sadness
+
         a_pattern_validated_field = (
             "vdurmont"
             if isinstance(a_pattern_validated_field, Sentinel)
@@ -854,7 +858,7 @@ class EntTestObjectExample:
         )
 
         correlation_id = (
-            UUID("061be863-3bea-41fc-bcfa-a8a5c3a81733")
+            UUID("b95915f7-7355-4973-8b13-75e530d3b534")
             if isinstance(correlation_id, Sentinel)
             else correlation_id
         )
@@ -925,17 +929,17 @@ class EntTestObjectExample:
             obj5_id=obj5_id,
             required_sub_object_id=required_sub_object_id,
             username=username,
+            lastname=lastname,
+            sadness=sadness,
             a_pattern_validated_field=a_pattern_validated_field,
             city=city,
             context=context,
             correlation_id=correlation_id,
             end_time=end_time,
             is_it_true=is_it_true,
-            lastname=lastname,
             obj5_opt_id=obj5_opt_id,
             optional_sub_object_id=optional_sub_object_id,
             optional_sub_object_no_ex_id=optional_sub_object_no_ex_id,
-            sadness=sadness,
             self_id=self_id,
             some_json=some_json,
             some_pattern_id=some_pattern_id,

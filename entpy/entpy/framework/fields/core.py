@@ -89,3 +89,6 @@ class FieldWithDefault(ABC, Generic[T]):
     @abstractmethod
     def generate_default(self: Self) -> str | None:
         pass
+
+    def generate_sql_default(self: Self) -> str | None:
+        return self.generate_default()

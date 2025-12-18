@@ -1,5 +1,5 @@
 from entpy import Schema
-from entpy.framework.fields.core import Field
+from entpy.framework.fields.core import Field, FieldWithDefault
 from entpy.gencode.generated_content import GeneratedContent
 from entpy.gencode.utils import to_snake_case as _to_snake_case
 
@@ -42,7 +42,13 @@ def _generate_base(schema: Schema, base_name: str, vc_name: str) -> GeneratedCon
     # Build up the list of arguments the create function takes
     arguments_definition = ""
     for field in schema.get_all_fields():
-        or_not = " | None = None" if field.nullable else ""
+        or_not = ""
+        if field.nullable:
+            or_not = " | None = None"
+        elif isinstance(field, FieldWithDefault):
+            default = field.generate_default()
+            if default:
+                or_not = f" = {default}"
         arguments_definition += f", {field.name}: {field.get_python_type()}{or_not}"
 
     # Build up the list of arguments the create function takes

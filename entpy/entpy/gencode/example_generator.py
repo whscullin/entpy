@@ -1,5 +1,6 @@
 from entpy import EdgeField, Schema
 from entpy.framework.fields.core import (
+    FieldWithDefault,
     FieldWithDynamicExample,
     FieldWithExample,
 )
@@ -14,8 +15,11 @@ def generate(schema: Schema, base_name: str, vc_name: str) -> GeneratedContent:
         typehint = field.get_python_type()
         # Use Sentinel for fields with examples so we can distinguish between
         # "no value provided" and "explicitly set to None"
-        has_example = (isinstance(field, FieldWithExample) and field.get_example_as_string()) or \
-                      (isinstance(field, FieldWithDynamicExample) and field.get_example_generator())
+        has_example = (
+            isinstance(field, FieldWithExample) and field.get_example_as_string()
+        ) or (
+            isinstance(field, FieldWithDynamicExample) and field.get_example_generator()
+        )
         if field.nullable and not has_example:
             typehint += " | None = None"
         else:
@@ -48,6 +52,17 @@ def generate(schema: Schema, base_name: str, vc_name: str) -> GeneratedContent:
                 {field.name} = generator()
 
 """  # noqa: E501
+
+        if isinstance(field, FieldWithDefault):
+            default = field.generate_default()
+            if default:
+                arguments_assignments += (
+                    "        "
+                    + field.name
+                    + " = "
+                    + default
+                    + f" if isinstance({field.name}, Sentinel) else {field.name}\n\n"
+                )
 
         if isinstance(field, EdgeField) and field.should_generate_example:
             edge_base_name = field.edge_class.__name__.replace("Schema", "").replace(
